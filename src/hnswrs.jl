@@ -30,7 +30,7 @@ Struct contining the id of a neighbour and distance to it.
 
 """
 mutable struct Neighbour 
-    id::UInt64
+    id::UInt
     dist :: Float32
 end
 
@@ -42,7 +42,7 @@ Structure returned by request searchNeighbour
 """
 
 mutable struct Neighbourhood 
-    nbgh :: UInt64
+    nbgh :: UInt
     neighbours :: Ptr{Neighbour}
 end
 
@@ -53,7 +53,7 @@ end
 """
 
 mutable struct NeighbourhoodVect
-    len :: UInt64
+    len :: UInt
     neigbourhood :: Ptr{Neighbourhood}
 end
 """
@@ -89,12 +89,12 @@ end
 """
 
 # multpile dispatch is a real help here
-function insert_f32_rs(ptr::Ref{HnswApi}, data::Vector{Float32}, id::UInt64)
+function insert_f32_rs(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
     ccall(
         (:insert_f32, libhnswso),
         Cvoid,
-        (Csize_t, Ptr{Cfloat}, Culonglong),
-        length(data), data, id)
+        (Ref{HnswApi}, Csize_t, Ref{Cfloat}, Culonglong),
+        ptr, UInt(length(data)), data, UInt64(id))
 end
 
 
@@ -104,18 +104,23 @@ end
     
 """
 
-function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::UInt64)
+function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, ef_search ::Int64)
     neighbours_ptr = ccall(
         (:search_neighbours_f32, libhnswso),
         Ptr{Neighbourhood},
-        (Csize_t, Ref{Cfloat}),
-        length(vector), vector
+        (Ref{HnswApi}, Csize_t, Ref{Cfloat}, Culonglong, Culonglong),
+        ptr, UInt(length(vector)), vector, UInt(knbn), UInt(ef_search)
     )
     # now return a Vector{Neighbourhood}
+    println("ccal returned", neighbours_ptr)
+    @debug "\n search_f32_rs returned pointer"  neighbours_ptr
+    println("trying unsafe load")
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
     @debug "\n search_f32_rs returned neighbours "  neighbourhood
-    nbgh = neighbourhood.nbgh
-    neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.ptr, NTuple{1,UInt}(nbgh); own = true)
+    nbgh = Int(neighbourhood.nbgh)
+    ptr_vec = neighbourhood.neighbours
+    @printf("\n got nbgh : %d , ptr : %p", nbgh, ptr_vec)
+    neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int}(nbgh); own = true)
     # we got Vector{Neighbour}
     return neighbours
 end
