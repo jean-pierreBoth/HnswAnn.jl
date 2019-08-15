@@ -7,7 +7,8 @@
 
 using Printf
 
-using Core
+using Logging
+using Base.CoreLogging
 
 ldpath = "/home/jpboth/Rust/hnswlib-rs/target/debug/"
 
@@ -23,14 +24,15 @@ end
 mutable struct HnswApi
 end
 
-
+logger = ConsoleLogger(stdout, CoreLogging.Debug)
+global_logger(logger)
 
 """
 Struct contining the id of a neighbour and distance to it.
 
 """
-mutable struct Neighbour 
-    id::UInt
+struct Neighbour 
+    id :: UInt
     dist :: Float32
 end
 
@@ -41,9 +43,10 @@ Structure returned by request searchNeighbour
 
 """
 
-mutable struct Neighbourhood 
-    nbgh :: UInt
-    neighbours :: Ptr{Neighbour}
+struct Neighbourhood 
+    nbgh :: Int64
+    ids :: Ptr{UInt64}
+    distances :: Ptr{Float64}
 end
 
 
@@ -52,10 +55,13 @@ end
  To retrive answer to parallel search of neigbourhood
 """
 
-mutable struct NeighbourhoodVect
+struct NeighbourhoodVect
     len :: UInt
-    neigbourhood :: Ptr{Neighbourhood}
+    ids :: Ptr{UInt64}
+    distances :: Ptr{Float64}
 end
+
+
 """
 
 # function hnswInit
@@ -93,7 +99,7 @@ function insert_f32_rs(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
     ccall(
         (:insert_f32, libhnswso),
         Cvoid,
-        (Ref{HnswApi}, Csize_t, Ref{Cfloat}, Culonglong),
+        (Ref{HnswApi}, UInt, Ref{Float32}, UInt64),
         ptr, UInt(length(data)), data, UInt64(id))
 end
 
@@ -108,7 +114,7 @@ function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, 
     neighbours_ptr = ccall(
         (:search_neighbours_f32, libhnswso),
         Ptr{Neighbourhood},
-        (Ref{HnswApi}, Csize_t, Ref{Cfloat}, Culonglong, Culonglong),
+        (Ref{HnswApi}, UInt, Ref{Float32}, UInt, UInt),
         ptr, UInt(length(vector)), vector, UInt(knbn), UInt(ef_search)
     )
     # now return a Vector{Neighbourhood}
@@ -117,11 +123,24 @@ function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, 
     println("trying unsafe load")
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
     @debug "\n search_f32_rs returned neighbours "  neighbourhood
-    nbgh = Int(neighbourhood.nbgh)
-    ptr_vec = neighbourhood.neighbours
-    @printf("\n got nbgh : %d , ptr : %p", nbgh, ptr_vec)
-    neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int}(nbgh); own = true)
+    for i in 1:neighbourhood.nbgh
+        val = unsafe_load(neighbourhood.ids, i)
+        @printf("\n loaded val  i =  %d", val)
+    end
+    @printf("\n unwrapping ids")
+    ids = unsafe_wrap(Array{UInt64,1}, neighbourhood.ids, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
+    @debug "ids : " ids
+    @printf("\n unwrapping distances")
+    distances = unsafe_wrap(Array{Float64,1}, neighbourhood.distances, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
+    @debug "distances : " distances
     # we got Vector{Neighbour}
+
+    #
+    neighbours = Vector{Neighbour}(undef, neighbourhood.nbgh)
+    for i in 1:neighbourhood.nbgh
+        @printf(" i =  %d d = %f", ids[i], distances[i])
+        neighbours[i] = Neighbour(ids[i], distances[i])
+    end
     return neighbours
 end
 
