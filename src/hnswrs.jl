@@ -33,7 +33,7 @@ Struct contining the id of a neighbour and distance to it.
 """
 struct Neighbour 
     id :: UInt
-    dist :: Float32
+    dist :: Float64
 end
 
 
@@ -45,8 +45,7 @@ Structure returned by request searchNeighbour
 
 struct Neighbourhood 
     nbgh :: Int64
-    ids :: Ptr{UInt64}
-    distances :: Ptr{Float64}
+    neighbours :: Ptr{Neighbour}
 end
 
 
@@ -123,24 +122,10 @@ function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, 
     println("trying unsafe load")
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
     @debug "\n search_f32_rs returned neighbours "  neighbourhood
-    for i in 1:neighbourhood.nbgh
-        val = unsafe_load(neighbourhood.ids, i)
-        @printf("\n loaded val  i =  %d", val)
-    end
-    @printf("\n unwrapping ids")
-    ids = unsafe_wrap(Array{UInt64,1}, neighbourhood.ids, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
-    @debug "ids : " ids
-    @printf("\n unwrapping distances")
-    distances = unsafe_wrap(Array{Float64,1}, neighbourhood.distances, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
-    @debug "distances : " distances
+    @printf("\n unwrapping  neighbourhood")
+    neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
+    @debug "neighbours : " neighbours
     # we got Vector{Neighbour}
-
-    #
-    neighbours = Vector{Neighbour}(undef, neighbourhood.nbgh)
-    for i in 1:neighbourhood.nbgh
-        @printf(" i =  %d d = %f", ids[i], distances[i])
-        neighbours[i] = Neighbour(ids[i], distances[i])
-    end
     return neighbours
 end
 
