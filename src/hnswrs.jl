@@ -33,7 +33,7 @@ Struct contining the id of a neighbour and distance to it.
 """
 struct Neighbour 
     id :: UInt
-    dist :: Float64
+    dist :: Float32
 end
 
 
@@ -55,9 +55,8 @@ end
 """
 
 struct NeighbourhoodVect
-    len :: UInt
-    ids :: Ptr{UInt64}
-    distances :: Ptr{Float64}
+    nb_request :: UInt
+    neighbourhoods :: Ptr{Neighbourhood}
 end
 
 
@@ -130,10 +129,29 @@ function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, 
 end
 
 
+# we must return a Vector{Vector{Neighbour}} , one Vector{Neighbour} per request input
 
 function parallel_search_f32(ptr::Ref{HnswApi}, datas::Vector{Vector{Float32}}, knbn::UInt64, ef_search:: UInt64)
     nb_vec = length(datas)
     len = length(datas[1])
     # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
-
+    vec_ref = map(x-> Ref(x), datas)
+    neighbourhood_vec_ptr = ccall(
+        (:parallel_search_neighbours_f32, libhnswso),
+        Ptr{NeighbourhoodVect},
+        (Ref{HnswApi}, UInt, Ref{Float32}, UInt, UInt),
+        ptr, UInt(nb_vec), UInt(len), vec_ref, UInt(knbn), UInt(ef_search)
+    )
+    @debug "\n parallel_search_neighbours_f32 returned pointer" neighbourhood_vec_ptr
+    neighbourhoods_vec = unsafe_load(neighbourhood_vec_ptr::Ptr{NeighbourhoodVect})
+    @printf("\n unwrapping  neighbourhoods_vec")
+    neighbourhoods = unsafe_wrap(Array{Neighbourhood,1}, neighbourhoods_vec.neighbourhoods, NTuple{1,Int64}(neighbourhoods_vec.nb_request); own = true)
+    neighbourhoods_answer = Vector{Vector{Neighbour}}(undef, nb_vec)
+    # now we must unwrap each neighbourhood
+    for i in 1:nb_vec
+        @debug "\n unwraping neighbourhood of request " i
+        neighbourhoods_answer[i] = unsafe_wrap(Array{Neighbour,1}, neighbourhoods[i].neighbours, NTuple{1,Int64}(neighbourhoods[i].nbgh); own = true)
+    end
+    #
+    return neighbourhoods_answer
 end
