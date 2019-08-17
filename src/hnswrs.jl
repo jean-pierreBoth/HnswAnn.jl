@@ -93,7 +93,7 @@ end
 """
 
 # multpile dispatch is a real help here
-function insert_f32_rs(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
+function insert_f32(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
     ccall(
         (:insert_f32, libhnswso),
         Cvoid,
@@ -129,7 +129,7 @@ end
     
 """
 
-function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, ef_search ::Int64)
+function search_f32(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, ef_search ::Int64)
     neighbours_ptr = ccall(
         (:search_neighbours_f32, libhnswso),
         Ptr{Neighbourhood},
