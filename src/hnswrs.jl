@@ -102,6 +102,27 @@ function insert_f32_rs(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
 end
 
 
+
+
+
+
+function parallel_insert_f32(ptr::Ref{HnswApi}, datas::Vector{Tuple{Vector{Float32}, UInt}})
+    # split vector of tuple 
+    nb_vec = length(datas)
+    len = length(datas[1])
+    # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
+    vec_ref = map(x-> pointer(x[1]), datas)
+    ids_ref = map(x-> x[2], datas)
+    neighbourhood_vec_ptr = ccall(
+        (:parallel_insert_f32, libhnswso),
+        Cvoid,
+        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{Float32}}, Ref{UInt}),
+        ptr, UInt(nb_vec), UInt(len), vec_ref, ids_ref
+    )
+end
+
+
+
 """
 # function search_f
 
@@ -127,6 +148,11 @@ function search_f32_rs(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, 
     # we got Vector{Neighbour}
     return neighbours
 end
+
+
+
+
+
 
 
 # we must return a Vector{Vector{Neighbour}} , one Vector{Neighbour} per request input
