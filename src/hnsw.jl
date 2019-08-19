@@ -1,8 +1,3 @@
-# This file provides an implementation of
-# the paper hnsw. 
-#
-# The implementation relies on a rust templated library.
-
 
 module Hnsw
 
@@ -22,6 +17,14 @@ export
 """
 
 # Struct Hnsw
+
+This is the structure encapsulting the rust api.
+
+* FIELDS
+ -------
+
+ . rust : a reference pointer coming from rust library. An opaque structure not to be manipulated.
+ . type : The type of Vector 
 
 
 
@@ -52,7 +55,7 @@ end
   ----
   . data: the data vector to insert in struct hnsw
   . id: the (unique) id of data. Can be the rank of insertion or any hash value enabling
-    identification of point for possible dump/restore of the whole hnsw structure
+        identification of point for possible dump/restore of the whole hnsw structure
 """
 
 function insert(hnsw::Hnsw, data::Vector{T}, id::UInt64) where {T <: Number}
