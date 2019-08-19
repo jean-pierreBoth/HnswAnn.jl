@@ -19,6 +19,16 @@ export
     search
 
 
+"""
+
+# Struct Hnsw
+
+
+
+"""
+
+
+
 mutable struct Hnsw
     rust :: Ref{HnswApi}
     type :: DataType
@@ -34,9 +44,31 @@ mutable struct Hnsw
 end
 
 
+"""
+ # function insert
+  `insert(hnsw::Hnsw, data::Vector{T}, id::UInt64) where {T <: Number}`
+
+  ARGS
+  ----
+  . data: the data vector to insert in struct hnsw
+  . id: the (unique) id of data. Can be the rank of insertion or any hash value enabling
+    identification of point for possible dump/restore of the whole hnsw structure
+"""
+
 function insert(hnsw::Hnsw, data::Vector{T}, id::UInt64) where {T <: Number}
     insert(hnsw.rust, data, id)
 end
+
+
+"""
+# parallel insertion of data into Hnsw structure
+
+`insert(hnsw::Hnsw, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
+
+ARGS
+----
+. datas: a vector of insertion request as a Tuple associating the point to insert and its id.
+"""
 
 
 function insert(hnsw::Hnsw, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
@@ -44,9 +76,36 @@ function insert(hnsw::Hnsw, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: N
 end
 
 
+"""
+# search request
+`search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}`
+
+ ARGS
+ ----
+ . The vector for which we search neighbours
+ . knbn : the number of neughbour we search
+ . ef_search : the search parameter.
+
+"""
+
+
 function search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
     search(hnsw.rust, vector, knbn, ef_search)
 end
+
+
+"""
+
+`function search(hnsw::Hnsw , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}`
+
+As for insertion this function is instersting if we batch sufficiently many request. (some hundreds)
+
+ARGS
+----
+    . datas : The vector of point we search the neighbours of.
+    . knbn the number of neighbours wanted.
+    . ef_search : parameter search.
+"""
 
 
 function search(hnsw::Hnsw , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
