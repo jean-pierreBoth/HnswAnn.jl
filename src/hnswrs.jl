@@ -1,8 +1,5 @@
 # This file provides glue from julia to our hnsw rust crate
 #
-# Nota! all indexes are translated from 0 to 1 begining
-#       by substracting one from julia to rust
-#       and adding 1 from rust to Julia
 #
 
 using Printf
@@ -47,6 +44,8 @@ end
 
 
 """
+# struct Neighbourhood 
+
 A pointer to Neighbours
 Structure returned by request searchNeighbour
 
@@ -61,7 +60,9 @@ end
 
 
 """
- To retrive answer to parallel search of neigbourhood
+# struct NeighbourhoodVect
+
+ To retrive answer to parallel search of neigbourhood.
 """
 
 struct NeighbourhoodVect
@@ -74,6 +75,7 @@ implementedTypes[Float32] = "f32"
 implementedTypes[UInt8] = "u8"
 implementedTypes[UInt16] = "u16"
 implementedTypes[Int32] = "i32"
+implementedTypes[UInt32] = "u32"
 
 
 function checkForImplementedType(type::DataType)
@@ -178,8 +180,7 @@ function search(ptr::Ref{HnswApi}, vector::Vector{T}, knbn::Int64, ef_search ::I
         $ptr, UInt(length($vector)), $vector, UInt($knbn), UInt($ef_search)
     )
     # now return a Vector{Neighbourhood}
-    @debug "\n search (rust) returned pointer"  neighbours_ptr
-    println("trying unsafe load")
+    @debug "\n search (rust) returned pointer, will do unsafe_load"  neighbours_ptr
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
     @debug "\n search rs returned neighbours "  neighbourhood
     neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
@@ -209,7 +210,7 @@ function parallel_search(ptr::Ref{HnswApi}, datas::Vector{Vector{T}}, knbn::Int6
     )
     @debug "\n parallel_search_neighbours rust returned pointer" neighbourhood_vec_ptr
     neighbourhoods_vec = unsafe_load(neighbourhood_vec_ptr::Ptr{NeighbourhoodVect})
-    @printf("\n unwrapping  neighbourhoods_vec")
+    @debug("\n unwrapping  neighbourhoods_vec")
     neighbourhoods = unsafe_wrap(Array{Neighbourhood,1}, neighbourhoods_vec.neighbourhoods, NTuple{1,Int64}(neighbourhoods_vec.nb_request); own = true)
     neighbourhoods_answer = Vector{Vector{Neighbour}}(undef, nb_vec)
     # now we must unwrap each neighbourhood
