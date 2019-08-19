@@ -21,6 +21,10 @@ function initlibso(path::String)
     push!(Base.DL_LOAD_PATH, path)
 end
 
+"""
+    A structure to encapsulate the Rust structure.
+"""
+
 mutable struct HnswApi
 end
 
@@ -28,7 +32,11 @@ logger = ConsoleLogger(stdout, CoreLogging.Debug)
 global_logger(logger)
 
 """
-Struct contining the id of a neighbour and distance to it.
+# Struct Neighbour.
+
+It contining the id of a neighbour and distance to it.
+When searching for the neighbour of a given point, this struct 
+returns the basic info on a neighbour consisting on its Id and the distance to the query point.
 
 """
 struct Neighbour 
@@ -40,6 +48,7 @@ end
 """
 A pointer to Neighbours
 Structure returned by request searchNeighbour
+
 
 """
 
@@ -65,23 +74,35 @@ end
 # function hnswInit
 
 * Args
-    . maxNbConn The maximum number of connection by node
+    . type of data vector.
+        The names of types are String and correspond to rust type names i.e
+        f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
+        The subsequent request insertion or search must be made with data corresponding
+        to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
+
+    . maxNbConn. The maximum number of connection by node
     . search parameter
+    . distname
 * Return
     . A pointer to Hnsw_api
 
 
 """
 
-# add a Val{Type} to do dispatch.
 
-function hnswInit(maxNbConn::Int64, efConstruction::Int64, distname::String)
-    hnsw = ccall(
-            (:init_hnsw_f32, libhnswso),
+function hnswInit(type :: String, maxNbConn::Int64, efConstruction::Int64, distname::String)
+    @eval hnsw = ccall(
+            $(string("init_hnsw_", type), libhnswso),
             Ptr{HnswApi}, # return type
             (UInt64, UInt64, Int64, Ptr{UInt8},),
-            UInt64(maxNbConn), UInt64(efConstruction), UInt64(length(distname)), pointer(distname)
+            UInt64($maxNbConn), UInt64($efConstruction), UInt64(length($distname)), pointer($distname)
         )
+end
+
+# add a Val{Type} to do dispatch.
+
+function hnswInit_f32(maxNbConn::Int64, efConstruction::Int64, distname::String)
+    hnsw = hnswInit("f32", maxNbConn, efConstruction, distname)
 end
 
 
@@ -92,8 +113,12 @@ end
 
 """
 
+
+###################  insert method
+
+
 # multpile dispatch is a real help here
-function insert_f32(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
+function insert(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
     ccall(
         (:insert_f32, libhnswso),
         Cvoid,
@@ -102,7 +127,41 @@ function insert_f32(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
 end
 
 
+# multpile dispatch is a real help here
+function insert(ptr::Ref{HnswApi}, data::Vector{UInt16}, id::Int64)
+    ccall(
+        (:insert_u16, libhnswso),
+        Cvoid,
+        (Ref{HnswApi}, UInt, Ref{UInt16}, UInt64),
+        ptr, UInt(length(data)), data, UInt64(id))
+end
 
+
+# multpile dispatch is a real help here
+function insert(ptr::Ref{HnswApi}, data::Vector{UInt8}, id::Int64)
+    ccall(
+        (:insert_u8, libhnswso),
+        Cvoid,
+        (Ref{HnswApi}, UInt, Ref{UInt8}, UInt64),
+        ptr, UInt(length(data)), data, UInt64(id))
+end
+
+
+
+# multpile dispatch is a real help here
+function insert(ptr::Ref{HnswApi}, data::Vector{Int32}, id::Int64)
+    ccall(
+        (:insert_i32, libhnswso),
+        Cvoid,
+        (Ref{HnswApi}, UInt, Ref{Int32}, UInt64),
+        ptr, UInt(length(data)), data, UInt64(id))
+end
+
+
+
+
+
+###################  parallel insert 
 
 
 
@@ -122,6 +181,8 @@ function parallel_insert_f32(ptr::Ref{HnswApi}, datas::Vector{Tuple{Vector{Float
 end
 
 
+
+########   search method 
 
 """
 # function search_f
@@ -148,9 +209,6 @@ function search_f32(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, ef_
     # we got Vector{Neighbour}
     return neighbours
 end
-
-
-
 
 
 
