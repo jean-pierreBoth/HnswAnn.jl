@@ -68,6 +68,20 @@ struct NeighbourhoodVect
     neighbourhoods :: Ptr{Neighbourhood}
 end
 
+implementedTypes = Dict{DataType, String}()
+implementedTypes[Float32] = "f32"
+implementedTypes[UInt8] = "u8"
+implementedTypes[UInt16] = "u16"
+implementedTypes[Int32] = "i32"
+
+
+function checkForImplementedType(type::DataType)
+    if haskey(implementedTypes, type)
+        return implementedTypes[type]
+    else
+        throw("hnswrs : unimplement type")
+    end
+end
 
 """
 
@@ -90,73 +104,33 @@ end
 """
 
 
-function hnswInit(type :: String, maxNbConn::Int64, efConstruction::Int64, distname::String)
+function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, distname::String)
+    # check for type
+    rust_type_name = checkForImplementedType(type)
     @eval hnsw = ccall(
-            $(string("init_hnsw_", type), libhnswso),
+            $(string("init_hnsw_", rust_type_name), libhnswso),
             Ptr{HnswApi}, # return type
             (UInt64, UInt64, Int64, Ptr{UInt8},),
             UInt64($maxNbConn), UInt64($efConstruction), UInt64(length($distname)), pointer($distname)
         )
 end
 
-# add a Val{Type} to do dispatch.
-
-function hnswInit_f32(maxNbConn::Int64, efConstruction::Int64, distname::String)
-    hnsw = hnswInit("f32", maxNbConn, efConstruction, distname)
-end
-
-
-"""
-# function insert_f32
-
-        inserts float vector{Float32}
-
-"""
 
 
 ###################  insert method
 
 
-# multpile dispatch is a real help here
-function insert(ptr::Ref{HnswApi}, data::Vector{Float32}, id::Int64)
-    ccall(
-        (:insert_f32, libhnswso),
+# 
+
+
+function insert(ptr::Ref{HnswApi}, data::Vector{T}, id::UInt64) where {T <: Number}
+    rust_type_name = checkForImplementedType(eltype(data))
+    @eval ccall(
+        $(string("insert_", rust_type_name), libhnswso),
         Cvoid,
-        (Ref{HnswApi}, UInt, Ref{Float32}, UInt64),
-        ptr, UInt(length(data)), data, UInt64(id))
+        (Ref{HnswApi}, UInt, Ref{$T}, UInt64),
+        $ptr, UInt(length($data)), $data, UInt64($id))
 end
-
-
-# multpile dispatch is a real help here
-function insert(ptr::Ref{HnswApi}, data::Vector{UInt16}, id::Int64)
-    ccall(
-        (:insert_u16, libhnswso),
-        Cvoid,
-        (Ref{HnswApi}, UInt, Ref{UInt16}, UInt64),
-        ptr, UInt(length(data)), data, UInt64(id))
-end
-
-
-# multpile dispatch is a real help here
-function insert(ptr::Ref{HnswApi}, data::Vector{UInt8}, id::Int64)
-    ccall(
-        (:insert_u8, libhnswso),
-        Cvoid,
-        (Ref{HnswApi}, UInt, Ref{UInt8}, UInt64),
-        ptr, UInt(length(data)), data, UInt64(id))
-end
-
-
-
-# multpile dispatch is a real help here
-function insert(ptr::Ref{HnswApi}, data::Vector{Int32}, id::Int64)
-    ccall(
-        (:insert_i32, libhnswso),
-        Cvoid,
-        (Ref{HnswApi}, UInt, Ref{Int32}, UInt64),
-        ptr, UInt(length(data)), data, UInt64(id))
-end
-
 
 
 
@@ -165,18 +139,21 @@ end
 
 
 
-function parallel_insert_f32(ptr::Ref{HnswApi}, datas::Vector{Tuple{Vector{Float32}, UInt}})
+function parallel_insert(ptr::Ref{HnswApi}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
+    # get data type of first field of tuple in datas
+    d_type = eltype(fieldtype(eltype(datas),1))
+    rust_type_name = checkForImplementedType(d_type)
     # split vector of tuple 
     nb_vec = length(datas)
     len = length(datas[1])
     # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
     vec_ref = map(x-> pointer(x[1]), datas)
     ids_ref = map(x-> x[2], datas)
-    neighbourhood_vec_ptr = ccall(
-        (:parallel_insert_f32, libhnswso),
+    @eval neighbourhood_vec_ptr = ccall(
+        $(string("parallel_insert_", rust_type_name), libhnswso),
         Cvoid,
-        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{Float32}}, Ref{UInt}),
-        ptr, UInt(nb_vec), UInt(len), vec_ref, ids_ref
+        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{$T}}, Ref{UInt}),
+        $ptr, UInt($nb_vec), UInt($len), $vec_ref, $ids_ref
     )
 end
 
@@ -190,20 +167,20 @@ end
     
 """
 
-function search_f32(ptr::Ref{HnswApi}, vector::Vector{Float32}, knbn::Int64, ef_search ::Int64)
-    neighbours_ptr = ccall(
-        (:search_neighbours_f32, libhnswso),
+function search(ptr::Ref{HnswApi}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
+    rust_type_name = checkForImplementedType(eltype(vector))
+    #
+    @eval neighbours_ptr = ccall(
+        $(string("search_neighbours_", rust_type_name), libhnswso),
         Ptr{Neighbourhood},
-        (Ref{HnswApi}, UInt, Ref{Float32}, UInt, UInt),
-        ptr, UInt(length(vector)), vector, UInt(knbn), UInt(ef_search)
+        (Ref{HnswApi}, UInt, Ref{$T}, UInt, UInt),
+        $ptr, UInt(length($vector)), $vector, UInt($knbn), UInt($ef_search)
     )
     # now return a Vector{Neighbourhood}
-    println("ccal returned", neighbours_ptr)
-    @debug "\n search_f32_rs returned pointer"  neighbours_ptr
+    @debug "\n search (rust) returned pointer"  neighbours_ptr
     println("trying unsafe load")
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
-    @debug "\n search_f32_rs returned neighbours "  neighbourhood
-    @printf("\n unwrapping  neighbourhood")
+    @debug "\n search rs returned neighbours "  neighbourhood
     neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
     @debug "neighbours : " neighbours
     # we got Vector{Neighbour}
@@ -215,18 +192,21 @@ end
 
 # we must return a Vector{Vector{Neighbour}} , one Vector{Neighbour} per request input
 
-function parallel_search_f32(ptr::Ref{HnswApi}, datas::Vector{Vector{Float32}}, knbn::Int64, ef_search:: Int64)
+function parallel_search(ptr::Ref{HnswApi}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
+    d_type = eltype(eltype(datas))
+    rust_type_name = checkForImplementedType(d_type)
+    #
     nb_vec = length(datas)
     len = length(datas[1])
     # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
     vec_ref = map(x-> pointer(x), datas)
-    neighbourhood_vec_ptr = ccall(
-        (:parallel_search_neighbours_f32, libhnswso),
+    @eval neighbourhood_vec_ptr = ccall(
+        $(string("parallel_search_neighbours_", rust_type_name), libhnswso),
         Ptr{NeighbourhoodVect},
-        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{Float32}}, UInt, UInt),
-        ptr, UInt(nb_vec), UInt(len), vec_ref, UInt(knbn), UInt(ef_search)
+        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{$T}}, UInt, UInt),
+        $ptr, UInt($nb_vec), UInt($len), $vec_ref, UInt($knbn), UInt($ef_search)
     )
-    @debug "\n parallel_search_neighbours_f32 returned pointer" neighbourhood_vec_ptr
+    @debug "\n parallel_search_neighbours rust returned pointer" neighbourhood_vec_ptr
     neighbourhoods_vec = unsafe_load(neighbourhood_vec_ptr::Ptr{NeighbourhoodVect})
     @printf("\n unwrapping  neighbourhoods_vec")
     neighbourhoods = unsafe_wrap(Array{Neighbourhood,1}, neighbourhoods_vec.neighbourhoods, NTuple{1,Int64}(neighbourhoods_vec.nb_request); own = true)
