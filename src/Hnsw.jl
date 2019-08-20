@@ -20,11 +20,16 @@ export
 
 This is the structure encapsulting the rust api.
 
-* FIELDS
+## FIELDS
  -------
 
- . rust : a reference pointer coming from rust library. An opaque structure not to be manipulated.
- . type : The type of Vector 
+* rust : a reference pointer coming from rust library. An opaque structure not to be manipulated.
+* type : The type of Vector
+* maxNbConn : The number of connection to use in Hnsw structure. Between 8 and 64.
+* efConstruction : The with of neighbours search used when constructing links between nodes.
+    A rule of thumb is between maxNbConn and 64.
+* distname : the name o the distance to use. It can be "DistL1", "DistL2", "DistCosine", DistDot", 
+        "DistHamming", "DistJaccard"
 """
 mutable struct HnswApi
     rust :: Ref{Hnswrs}
@@ -52,7 +57,6 @@ end
   . id: the (unique) id of data. Can be the rank of insertion or any hash value enabling
         identification of point for possible dump/restore of the whole hnsw structure
 """
-
 function insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}
     insert(hnsw.rust, data, id)
 end
@@ -69,8 +73,6 @@ ARGS
 ----
 . datas: a vector of insertion request as a Tuple associating the point to insert and its id.
 """
-
-
 function insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
     parallel_insert(hnsw.rust, datas)
 end
@@ -88,8 +90,6 @@ function `search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) 
  . ef_search : the search parameter.
 
 """
-
-
 function search(hnsw::HnswApi, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
     search(hnsw.rust, vector, knbn, ef_search)
 end
@@ -109,8 +109,6 @@ ARGS
     . knbn the number of neighbours wanted.
     . ef_search : parameter search.
 """
-
-
 function search(hnsw::HnswApi , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     parallel_search(hnsw.rust, datas, knbn, ef_search)
 end
