@@ -23,7 +23,7 @@ setRustlibPath(ldpath)
     A structure to encapsulate the Rust structure.
 """
 
-mutable struct HnswApi
+mutable struct Hnswrs
 end
 
 logger = ConsoleLogger(stdout, CoreLogging.Debug)
@@ -112,7 +112,7 @@ function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, dis
     rust_type_name = checkForImplementedType(type)
     @eval hnsw = ccall(
             $(string("init_hnsw_", rust_type_name), libhnswso),
-            Ptr{HnswApi}, # return type
+            Ptr{Hnswrs}, # return type
             (UInt64, UInt64, Int64, Ptr{UInt8},),
             UInt64($maxNbConn), UInt64($efConstruction), UInt64(length($distname)), pointer($distname)
         )
@@ -126,12 +126,12 @@ end
 # 
 
 
-function insert(ptr::Ref{HnswApi}, data::Vector{T}, id::UInt64) where {T <: Number}
+function insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
     rust_type_name = checkForImplementedType(eltype(data))
     @eval ccall(
         $(string("insert_", rust_type_name), libhnswso),
         Cvoid,
-        (Ref{HnswApi}, UInt, Ref{$T}, UInt64),
+        (Ref{Hnswrs}, UInt, Ref{$T}, UInt64),
         $ptr, UInt(length($data)), $data, UInt64($id))
 end
 
@@ -142,7 +142,7 @@ end
 
 
 
-function parallel_insert(ptr::Ref{HnswApi}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
+function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
     # get data type of first field of tuple in datas
     d_type = eltype(fieldtype(eltype(datas),1))
     rust_type_name = checkForImplementedType(d_type)
@@ -155,7 +155,7 @@ function parallel_insert(ptr::Ref{HnswApi}, datas::Vector{Tuple{Vector{T}, UInt}
     @eval neighbourhood_vec_ptr = ccall(
         $(string("parallel_insert_", rust_type_name), libhnswso),
         Cvoid,
-        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{$T}}, Ref{UInt}),
+        (Ref{Hnswrs}, UInt, UInt, Ref{Ptr{$T}}, Ref{UInt}),
         $ptr, UInt($nb_vec), UInt($len), $vec_ref, $ids_ref
     )
 end
@@ -170,13 +170,13 @@ end
     
 """
 
-function search(ptr::Ref{HnswApi}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
+function search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
     rust_type_name = checkForImplementedType(eltype(vector))
     #
     @eval neighbours_ptr = ccall(
         $(string("search_neighbours_", rust_type_name), libhnswso),
         Ptr{Neighbourhood},
-        (Ref{HnswApi}, UInt, Ref{$T}, UInt, UInt),
+        (Ref{Hnswrs}, UInt, Ref{$T}, UInt, UInt),
         $ptr, UInt(length($vector)), $vector, UInt($knbn), UInt($ef_search)
     )
     # now return a Vector{Neighbourhood}
@@ -194,7 +194,7 @@ end
 
 # we must return a Vector{Vector{Neighbour}} , one Vector{Neighbour} per request input
 
-function parallel_search(ptr::Ref{HnswApi}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
+function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     d_type = eltype(eltype(datas))
     rust_type_name = checkForImplementedType(d_type)
     #
@@ -205,7 +205,7 @@ function parallel_search(ptr::Ref{HnswApi}, datas::Vector{Vector{T}}, knbn::Int6
     @eval neighbourhood_vec_ptr = ccall(
         $(string("parallel_search_neighbours_", rust_type_name), libhnswso),
         Ptr{NeighbourhoodVect},
-        (Ref{HnswApi}, UInt, UInt, Ref{Ptr{$T}}, UInt, UInt),
+        (Ref{Hnswrs}, UInt, UInt, Ref{Ptr{$T}}, UInt, UInt),
         $ptr, UInt($nb_vec), UInt($len), $vec_ref, UInt($knbn), UInt($ef_search)
     )
     @debug "\n parallel_search_neighbours rust returned pointer" neighbourhood_vec_ptr

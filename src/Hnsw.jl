@@ -8,7 +8,7 @@ include("hnswrs.jl")
 export 
     Neighbour,
     Neighbourhood,
-    Hnsw,
+    HnswApi,
     setRustlibPath,
     insert,
     search
@@ -16,7 +16,7 @@ export
 
 """
 
-# Struct Hnsw
+# Struct HnswApi
 
 This is the structure encapsulting the rust api.
 
@@ -32,8 +32,8 @@ This is the structure encapsulting the rust api.
 
 
 
-mutable struct Hnsw
-    rust :: Ref{HnswApi}
+mutable struct HnswApi
+    rust :: Ref{Hnswrs}
     type :: DataType
     maxNbConn::Int64
     efConstruction::Int64
@@ -49,7 +49,7 @@ end
 
 """
  # function insert
-  `insert(hnsw::Hnsw, data::Vector{T}, id::UInt64) where {T <: Number}`
+  `insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}`
 
   ARGS
   ----
@@ -58,7 +58,7 @@ end
         identification of point for possible dump/restore of the whole hnsw structure
 """
 
-function insert(hnsw::Hnsw, data::Vector{T}, id::UInt64) where {T <: Number}
+function insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}
     insert(hnsw.rust, data, id)
 end
 
@@ -66,7 +66,7 @@ end
 """
 # parallel insertion of data into Hnsw structure
 
-`insert(hnsw::Hnsw, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
+`insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
 
 ARGS
 ----
@@ -74,7 +74,7 @@ ARGS
 """
 
 
-function insert(hnsw::Hnsw, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
+function insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
     parallel_insert(hnsw.rust, datas)
 end
 
@@ -92,7 +92,7 @@ end
 """
 
 
-function search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
+function search(hnsw::HnswApi, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
     search(hnsw.rust, vector, knbn, ef_search)
 end
 
@@ -111,7 +111,7 @@ ARGS
 """
 
 
-function search(hnsw::Hnsw , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
+function search(hnsw::HnswApi , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     parallel_search(hnsw.rust, datas, knbn, ef_search)
 end
 

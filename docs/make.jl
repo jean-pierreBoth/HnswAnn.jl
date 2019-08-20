@@ -7,7 +7,7 @@ using Documenter, Hnsw
 
 makedocs(
     format = :html,
-    sitename = "Hnsw",
+    sitename = "Hnsw.jl",
     pages = Any[
         "Introduction" => "INTRO.md",
         "RPTree.jl documentation" => "index.md",
@@ -15,7 +15,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "RandomProjectionTree.git",
+    repo = "Hnsw.jl.git",
     target = "build",
     julia = "1.1",
     osname = "linux",
