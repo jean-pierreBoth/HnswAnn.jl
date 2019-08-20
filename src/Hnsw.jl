@@ -16,7 +16,7 @@ export
 
 """
 
-# Struct HnswApi
+# HnswApi
 
 This is the structure encapsulting the rust api.
 
@@ -48,7 +48,9 @@ end
 
 
 """
- # function `insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}`
+ #  insert 
+
+ function `insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}`
 
   ARGS
   ----
@@ -63,7 +65,9 @@ end
 
 
 """
-# function `insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
+# insert 
+
+function `insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
 
 This function does a block parallel insertion of datas in structure.
 
@@ -79,7 +83,9 @@ end
 
 
 """
-# function `search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}`
+# search
+
+function `search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}`
 
  ARGS
  ----
@@ -96,6 +102,8 @@ end
 
 
 """
+
+# search
 
 `function search(hnsw::Hnsw , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}`
 

@@ -44,14 +44,12 @@ end
 
 
 """
-# struct Neighbourhood 
+# struct Neighbourhood. 
 
 A pointer to Neighbours
 Structure returned by request searchNeighbour
 
-
 """
-
 struct Neighbourhood 
     nbgh :: Int64
     neighbours :: Ptr{Neighbour}

@@ -6,7 +6,7 @@ using Documenter, Hnsw
 
 
 makedocs(
-    format = :html,
+    format = Documenter.HTML(prettyurls = false),
     sitename = "Hnsw.jl",
     pages = Any[
         "Introduction" => "INTRO.md",

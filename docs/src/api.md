@@ -1,7 +1,9 @@
-# api
+```@index
+Pages = ["api.md"]
+```# api
 
 ```@docs
-Hnsw.HnswApi
+HnswApi
 Hnsw.Neighbour
 Hnsw.Neighbourhood
 ```
