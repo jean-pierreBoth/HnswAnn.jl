@@ -48,8 +48,7 @@ end
 
 
 """
- # function insert
-  `insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}`
+ # function `insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}`
 
   ARGS
   ----
@@ -64,9 +63,9 @@ end
 
 
 """
-# parallel insertion of data into Hnsw structure
+# function `insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
 
-`insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}`
+This function does a block parallel insertion of datas in structure.
 
 ARGS
 ----
@@ -80,8 +79,7 @@ end
 
 
 """
-# search request
-`search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}`
+# function `search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}`
 
  ARGS
  ----

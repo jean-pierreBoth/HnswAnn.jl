@@ -10,7 +10,8 @@ makedocs(
     sitename = "Hnsw.jl",
     pages = Any[
         "Introduction" => "INTRO.md",
-        "RPTree.jl documentation" => "index.md",
+        "API documentation" => "api.md",
+        "Internals" => "internals.md"
     ]
 )
 

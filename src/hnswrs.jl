@@ -70,6 +70,14 @@ struct NeighbourhoodVect
     neighbourhoods :: Ptr{Neighbourhood}
 end
 
+
+"""
+implementedTypes is a dictionary that has 2 functionalities
+1.  It lists the types on which an instantiation is made for languages others than Rust.
+2.  It enables the mapping to the correct method in rust library by concatenating the type to the
+    name of the method to be called.
+"""
+
 implementedTypes = Dict{DataType, String}()
 implementedTypes[Float32] = "f32"
 implementedTypes[UInt8] = "u8"
@@ -123,7 +131,14 @@ end
 ###################  insert method
 
 
-# 
+"""
+function insert
+
+    The function fitst that it is called for an implemented type.
+    It generates the name of the rust function to be called and passes the call to @eval
+    as we cannot call directly ccall with a non constant couple (fname, library)
+    Cf Julia manual
+"""
 
 
 function insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
