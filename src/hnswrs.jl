@@ -13,6 +13,16 @@ const libhnswso = "libhnsw"
 
 
 # to be called before anything
+"""
+# function setRustlibPath
+
+This function tells julia where is installed the rust dynamic library implementing the
+    Hnsw algorithm.
+
+The argument is the path to the rust library.
+It must be called after `using Hnsw` and before any function call
+
+"""
 function setRustlibPath(path::String)
     push!(Base.DL_LOAD_PATH, path)
 end
@@ -95,17 +105,17 @@ end
 
 # function hnswInit
 
- ## Args
-    * type of data vector.
+## Args
+* type of data vector.
         The names of types are String and correspond to rust type names i.e
         f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
 
         The subsequent request insertion or search must be made with data corresponding
         to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
 
-    * maxNbConn. The maximum number of connection by node
-    * search parameter
-    * distname
+* maxNbConn. The maximum number of connection by node
+* search parameter
+* distname
 
  ## Return
     *A pointer to Hnswrs

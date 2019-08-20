@@ -15,11 +15,3 @@ makedocs(
     ]
 )
 
-deploydocs(
-    repo = "Hnsw.jl.git",
-    target = "build",
-    julia = "1.1",
-    osname = "linux",
-    deps = nothing,
-    make = nothing
-)

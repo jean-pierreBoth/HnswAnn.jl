@@ -51,8 +51,8 @@ end
 
  function `insert(hnsw::HnswApi, data::Vector{T}, id::UInt64) where {T <: Number}`
 
-  ARGS
-  ----
+## Args
+  
   * data: the data vector to insert in struct hnsw
   * id: the (unique) id of data. Can be the rank of insertion or any hash value enabling
         identification of point for possible dump/restore of the whole hnsw structure
@@ -69,7 +69,7 @@ function `insert(hnsw::HnswApi, datas::Vector{Tuple{Vector{T}, UInt}}) where {T 
 
 This function does a block parallel insertion of datas in structure.
 
-ARGS
+## Args
 ----
 * datas: a vector of insertion request as a Tuple associating the point to insert and its id.
 """
@@ -83,11 +83,11 @@ end
 
 function `search(hnsw::Hnsw, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}`
 
- ARGS
- ----
- * The vector for which we search neighbours
- * knbn : the number of neughbour we search
- * ef_search : the search parameter.
+ ## Args
+ 
+* The vector for which we search neighbours
+* knbn : the number of neughbour we search
+* ef_search : the search parameter.
 
 """
 function search(hnsw::HnswApi, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
@@ -103,11 +103,11 @@ end
 
 As for insertion this function is instersting if we batch sufficiently many request. (some hundreds)
 
-ARGS
-----
-    * datas : The vector of point we search the neighbours of.
-    * knbn the number of neighbours wanted.
-    * ef_search : parameter search.
+##  Args
+
+* datas : The vector of point we search the neighbours of.
+* knbn the number of neighbours wanted.
+* ef_search : parameter search.
 """
 function search(hnsw::HnswApi , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     parallel_search(hnsw.rust, datas, knbn, ef_search)
