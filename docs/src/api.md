@@ -1,6 +1,8 @@
+# api doc
+
 ```@index
 Pages = ["api.md"]
-```# api
+```
 
 ```@docs
 HnswApi

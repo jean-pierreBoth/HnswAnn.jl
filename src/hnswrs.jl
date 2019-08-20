@@ -22,7 +22,6 @@ setRustlibPath(ldpath)
 """
     A structure to encapsulate the Rust structure.
 """
-
 mutable struct Hnswrs
 end
 
@@ -130,12 +129,12 @@ end
 """
 # function insert
 
-    The function fitst that it is called for an implemented type.
+    The function first checks that it is called for an implemented type.
     It generates the name of the rust function to be called and passes the call to @eval
     as we cannot call directly ccall with a non constant couple (fname, library)
     Cf Julia manual
 """
-function insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
+function one_insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
     rust_type_name = checkForImplementedType(eltype(data))
     @eval ccall(
         $(string("insert_", rust_type_name), libhnswso),
@@ -178,7 +177,7 @@ end
 
     
 """
-function search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
+function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
     rust_type_name = checkForImplementedType(eltype(vector))
     #
     @eval neighbours_ptr = ccall(
