@@ -25,13 +25,7 @@ This is the structure encapsulting the rust api.
 
  . rust : a reference pointer coming from rust library. An opaque structure not to be manipulated.
  . type : The type of Vector 
-
-
-
 """
-
-
-
 mutable struct HnswApi
     rust :: Ref{Hnswrs}
     type :: DataType
