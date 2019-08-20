@@ -95,18 +95,20 @@ end
 
 # function hnswInit
 
-* Args
-    . type of data vector.
+ ## Args
+    * type of data vector.
         The names of types are String and correspond to rust type names i.e
         f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
+
         The subsequent request insertion or search must be made with data corresponding
         to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
 
-    . maxNbConn. The maximum number of connection by node
-    . search parameter
-    . distname
-* Return
-    . A pointer to Hnsw_api
+    * maxNbConn. The maximum number of connection by node
+    * search parameter
+    * distname
+
+ ## Return
+    *A pointer to Hnswrs
 
 
 """
@@ -127,12 +129,12 @@ end
 
 
 """
-# function insert
+# one_insert
 
     The function first checks that it is called for an implemented type.
-    It generates the name of the rust function to be called and passes the call to @eval
-    as we cannot call directly ccall with a non constant couple (fname, library)
-    Cf Julia manual
+    It generates the name of the rust function to be called and
+    passes the call to @eval as we cannot call directly ccall with a 
+    non constant couple (fname, library) Cf Julia manual
 """
 function one_insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
     rust_type_name = checkForImplementedType(eltype(data))
@@ -149,7 +151,9 @@ end
 ###################  parallel insert 
 
 
-
+"""
+    # parallel insertion 
+"""
 function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
     # get data type of first field of tuple in datas
     d_type = eltype(fieldtype(eltype(datas),1))
@@ -173,7 +177,7 @@ end
 ########   search method 
 
 """
-# function search_f
+# function one_search
 
     
 """
@@ -200,7 +204,9 @@ end
 
 
 # we must return a Vector{Vector{Neighbour}} , one Vector{Neighbour} per request input
-
+"""
+# parallel_search function
+"""
 function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     d_type = eltype(eltype(datas))
     rust_type_name = checkForImplementedType(d_type)
