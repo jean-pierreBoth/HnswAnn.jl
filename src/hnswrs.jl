@@ -134,6 +134,16 @@ function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, dis
 end
 
 
+function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})
+    # check for type
+    rust_type_name = checkForImplementedType(type)
+    @eval hnsw = ccall(
+        $(string("init_distptr_", rust_type_name), libhnswso),
+        Ptr{Hnswrs}, # return type
+        (UInt64, UInt64, Ptr{Cvoid},),
+        UInt64($maxNbConn), UInt64($efConstruction), $f
+    )
+end
 
 ###################  insert method
 
@@ -170,7 +180,8 @@ function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}
     rust_type_name = checkForImplementedType(d_type)
     # split vector of tuple 
     nb_vec = length(datas)
-    len = length(datas[1])
+    # get length of first component of first data (i.e dim of first vector)
+    dim = length(datas[1][1])
     # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
     vec_ref = map(x-> pointer(x[1]), datas)
     ids_ref = map(x-> x[2], datas)
@@ -178,7 +189,7 @@ function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}
         $(string("parallel_insert_", rust_type_name), libhnswso),
         Cvoid,
         (Ref{Hnswrs}, UInt, UInt, Ref{Ptr{$T}}, Ref{UInt}),
-        $ptr, UInt($nb_vec), UInt($len), $vec_ref, $ids_ref
+        $ptr, UInt($nb_vec), UInt($dim), $vec_ref, $ids_ref
     )
 end
 
