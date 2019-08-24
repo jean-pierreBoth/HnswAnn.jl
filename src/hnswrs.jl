@@ -135,12 +135,13 @@ end
 
 
 function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})
+    @debug "recieving function ptr : " f
     # check for type
     rust_type_name = checkForImplementedType(type)
     @eval hnsw = ccall(
-        $(string("init_distptr_", rust_type_name), libhnswso),
+        $(string("init_hnsw_ptrdist_", rust_type_name), libhnswso),
         Ptr{Hnswrs}, # return type
-        (UInt64, UInt64, Ptr{Cvoid},),
+        (UInt64, UInt64, Ptr{Cvoid}),
         UInt64($maxNbConn), UInt64($efConstruction), $f
     )
 end
