@@ -256,3 +256,16 @@ function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64
     #
     return neighbourhoods_answer
 end
+
+
+
+function filedump(ptr::Ref{Hnswrs}, d_type :: DataType, filename::String)
+    rust_type_name = checkForImplementedType(d_type)
+    resdump = @eval ccall(
+        $(string("file_dump_", rust_type_name), libhnswso),
+        Clonglong,
+        (Ref{Hnswrs}, UInt64, Ptr{UInt8},),
+        $ptr, UInt64(length($filename)), pointer($filename)
+    )
+    resdump
+end

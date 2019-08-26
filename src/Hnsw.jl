@@ -12,7 +12,8 @@ export
     createHnswApi,
     setRustlibPath,
     insert,
-    search
+    search,
+    fileDump
 
 
 """
@@ -38,7 +39,7 @@ This is the structure encapsulting the rust api.
 
 * A pointer to a function computing distances created by the macro @cfunction.
     The signature of the function must be Cfloat, (Ptr{Cfloat}, Ptr{Cfloat}, Culonglong))
-    See the test testdistptr in test.jl and the documentation of @cfunction.
+    See testdistptr function in test.jl and the documentation of @cfunction.
 
 """
 mutable struct HnswApi
@@ -149,6 +150,20 @@ As for insertion this function is instersting if we batch sufficiently many requ
 """
 function search(hnsw::HnswApi , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     parallel_search(hnsw.rust, datas, knbn, ef_search)
+end
+
+
+
+"""
+# file dump
+
+Returns 1 if OK , -1 if failure.
+
+"""
+
+function fileDump(hnsw::HnswApi,  filename::String)
+    res = filedump(hnsw.rust, hnsw.type, filename)
+    res
 end
 
 
