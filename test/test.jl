@@ -44,6 +44,8 @@ end
 mydist_ptr = Base.@cfunction(mydist, Cfloat, (Ptr{Cfloat}, Ptr{Cfloat}, Culonglong))
 
 
+# test only serial insertion/search until julia 1.3
+
 function testdistptr()
     dim = 10
     hnsw = hnswInit(Float32, 8, 16, mydist_ptr)
@@ -57,14 +59,24 @@ function testdistptr()
     println("testing one search")
     v1 = rand(Float32, dim)
     neighbours = one_search(hnsw, v1, 10, 16)
-    # testing block // search
-    println("testing parallel search")
-    datas = map(i -> rand(Float32, dim), 1:100)
-    neighbours = parallel_search(hnsw, datas, 10, 16)
     true
 end
 
 
+function testdump()
+    dim = 10
+    hnsw = hnswInit(Float32, 8, 16, "DistL1")
+    # block // insertion
+    datas = rand(Float32, (dim, 500));
+    data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
+    parallel_insert(hnsw, data_insert)
+    #
+    res = filedump(hnsw, "testdumpfromjulia.hnws")
+    if res > 0
+        true
+    else
+        false
+end
 
 @testset "f32" begin
     @test testdistl1()

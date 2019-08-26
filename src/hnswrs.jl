@@ -269,3 +269,54 @@ function filedump(ptr::Ref{Hnswrs}, d_type :: DataType, filename::String)
     )
     resdump
 end
+
+
+struct LoadHnswDescription
+    dumpmode :: UInt8
+    #max number of connections in layers != 0
+    max_nb_connection :: UInt8
+    # number of observed layers
+    nb_layer :: UInt8
+    # search parameter
+    ef :: UInt64
+    # total number of points
+    nb_point:: UInt64
+    # length and pointer on dist name
+    distname_len :: UInt64
+    distname :: Ptr{UInt8}
+    # T typename
+    t_name_len :: UInt64
+    t_name :: Ptr{UInt8} 
+end
+
+
+function getDescription(filename :: String)
+    #
+    description_ptr = ccall(
+        (:load_hnsw_description, libhnswso),
+        Ptr{LoadHnswDescription},
+        (UInt64, Ptr{UInt8},),
+        UInt64(length(filename)), pointer(filename)
+    )
+    # 
+    if description_ptr == C_NULL
+        println("call to getDescription failed , filename was :", filename)
+        return
+    end
+    #
+    ffiDescription  = unsafe_load(description_ptr::Ptr{LoadHnswDescription})
+    typename_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.t_name, NTuple{1,UInt64}(ffiDescription.t_name_len); own = true)
+    typename = String(typename_u)
+    # get key for typename
+    allkeys = collect(keys(implementedTypes))
+    key = findfirst(x-> implementedTypes[x] == typename , allkeys)
+    if key === nothing
+        println("type not implemented : ", typename)
+        return
+    end
+    # now we have rust type name and we know it is implemented
+    # we must check if distname is "DistPtr"
+    distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distnamet_len); own = true)
+    distname = String(distname_u) 
+ 
+end
