@@ -391,6 +391,6 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
             $(string("load_hnsw_", rust_type_name), libhnswso),
             Ptr{Hnswrs}, # return type
             (Int64, Ptr{UInt8},Int64, Ptr{UInt8},),
-            UInt64($length(filename)), pointer($filename), UInt64(length($distname)), pointer($distname)
+            UInt64($length(filename)), pointer($filename)
         )
 end
