@@ -281,6 +281,8 @@ struct LoadHnswDescription
     ef :: UInt64
     # total number of points
     nb_point:: UInt64
+    # dimesion of data vector
+    data_dimension :: UInt64
     # length and pointer on dist name
     distname_len :: UInt64
     distname :: Ptr{UInt8}
@@ -290,6 +292,34 @@ struct LoadHnswDescription
 end
 
 
+
+struct HnswDescription
+    maxNbConn::Int64
+    # number of observed layers
+    nb_layer :: Int64
+    # search parameter
+    ef :: Int64
+    # total number of points
+    nb_point:: Int64
+    # dimesion of data vector
+    data_dimension :: Int64
+    type :: DataType
+    distname::String
+    distfunctPtr :: Some{Ptr{Cvoid}}
+end
+
+
+#  to load a description of graph stored in a file
+#  filename is the base of the filename (without suffixes "hnsw.graph" of hnsw.data"
+
+"""
+# `function getDescription(filename::String `
+
+This function returns a description of graph stored such as type of data stored (Float32,....)
+    type of distance and search parameters.
+    Information in data type is necessary to be able to instantiate the rust library and is used 
+    by function loadHnsw(filename :: String)
+"""
 function getDescription(filename :: String)
     #
     description_ptr = ccall(
@@ -301,7 +331,7 @@ function getDescription(filename :: String)
     # 
     if description_ptr == C_NULL
         println("call to getDescription failed , filename was :", filename)
-        return
+        return nothing
     end
     #
     ffiDescription  = unsafe_load(description_ptr::Ptr{LoadHnswDescription})
@@ -309,14 +339,58 @@ function getDescription(filename :: String)
     typename = String(typename_u)
     # get key for typename
     allkeys = collect(keys(implementedTypes))
-    key = findfirst(x-> implementedTypes[x] == typename , allkeys)
-    if key === nothing
+    keytype = findfirst(x-> implementedTypes[x] == typename , allkeys)
+    if keytype === nothing
+        # this should not occur
         println("type not implemented : ", typename)
-        return
+        return nothing
     end
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
     distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distnamet_len); own = true)
-    distname = String(distname_u) 
- 
+    distname = String(distname_u)
+    # dump info
+    println("Description :")
+    println("distance name", distname)
+    println("distance type", typename)   
+    #
+    HnswDescription(Int64(ffiDescription.max_nb_connection),
+                    Int64(ffiDescription.nb_layer),
+                    Int64(ffiDescription.ef),
+                    Int64(ffiDescription.nb_point),
+                    Int64(ffiDescription.data_dimension),
+                    keytype,
+                    distname,
+                    Nothing
+    )
+end
+
+
+
+"""
+    # `function loadHnsw(filename :: String)`
+
+    This function reloads data from the 2 files created when dumping data
+    the graph and data files.
+    The filename sent as arg is the base of the names used to dump files in.
+    It does not have the suffixes "hnsw.graph" and "hnsw.data"
+"""
+function loadHnsw(filename :: String, type :: DataType, distname :: String)
+    # append hnsw.graph and load description
+    graphFileName  = filename*".hnsw.graph"
+    # get a HnswDescription
+    description = getDescription(graphFileName)
+    # check for types
+    if description === nothing
+        @warn "some error occurred, could not load a coherent description"
+        return nothing
+    end
+    rust_type_name = checkForImplementedType(type)
+    # call rust stub
+    @eval hnsw = ccall(
+            $(string("load_hnsw_", rust_type_name), libhnswso),
+            Ptr{Hnswrs}, # return type
+            (Int64, Ptr{UInt8},Int64, Ptr{UInt8},),
+            UInt64($length(filename)), pointer($filename), UInt64(length($distname)), pointer($distname)
+        )
 end
