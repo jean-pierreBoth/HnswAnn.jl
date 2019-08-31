@@ -8,7 +8,7 @@ include("../src/hnswrs.jl")
 
 function testdistl1()
     dim = 10
-    hnsw = hnswInit(Float32, 8, 16, "DistL1")
+    hnsw = createHnswApi(Float32, 8, 16, "DistL1")
     # block // insertion
     datas = rand(Float32, (dim, 500));
     data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
@@ -70,7 +70,7 @@ function testdump()
     # block // insertion
     datas = rand(Float32, (dim, 500));
     data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
-    parallel_insert(hnsw, data_insert)
+    insert(hnsw, data_insert)
     #
     res = fileDump(hnsw, "testdumpfromjulia")
     if res > 0
