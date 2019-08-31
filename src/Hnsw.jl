@@ -48,7 +48,7 @@ mutable struct HnswApi
     maxNbConn::Int64
     efConstruction::Int64
     distname::String
-    distfunctPtr :: Some{Ptr{Cvoid}}
+    distfunctPtr :: Union{ Some{Ptr{Cvoid}} , Nothing }
 end
 
 
@@ -62,7 +62,7 @@ end
 function createHnswApi(type::DataType, maxNbConn::Int64, efConstruction::Int64, distname::String)
     rust_type_name = checkForImplementedType(type)
     rust = hnswInit(type, maxNbConn, efConstruction, distname)
-    HnswApi(rust, type, maxNbConn, efConstruction, distname, Nothing)
+    HnswApi(rust, type, maxNbConn, efConstruction, distname, nothing)
 end
 
 """
