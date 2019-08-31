@@ -1,3 +1,4 @@
+using Hnsw
 using Test
 
 include("../src/hnswrs.jl")
@@ -65,18 +66,27 @@ end
 
 function testdump()
     dim = 10
-    hnsw = hnswInit(Float32, 8, 16, "DistL1")
+    hnsw = createHnswApi(Float32, 8, 16, "DistL1")
     # block // insertion
     datas = rand(Float32, (dim, 500));
     data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
     parallel_insert(hnsw, data_insert)
     #
-    res = filedump(hnsw, "testdumpfromjulia.hnws")
+    res = fileDump(hnsw, "testdumpfromjulia")
     if res > 0
         true
     else
+        @warn "file dump failed : " "testdumpfromjulia"
         false
+    end
 end
+
+
+function testreload()
+    hnsw = loadHnsw("testdumpfromjulia", Float32, "DistL1")
+end
+
+
 
 @testset "f32" begin
     @test testdistl1()
