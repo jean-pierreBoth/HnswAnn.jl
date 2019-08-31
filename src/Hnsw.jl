@@ -13,8 +13,8 @@ export
     setRustlibPath,
     insert,
     search,
-    fileDump
-
+    fileDump,
+    loadHnsw
 
 """
 

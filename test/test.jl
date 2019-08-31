@@ -83,7 +83,7 @@ end
 
 
 function testreload()
-    hnsw = loadHnsw("testdumpfromjulia", Float32, "DistL1")
+    hnsw2 = loadHnsw("testdumpfromjulia", Float32, "DistL1")
 end
 
 

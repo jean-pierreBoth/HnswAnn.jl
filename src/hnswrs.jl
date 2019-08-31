@@ -388,9 +388,9 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     rust_type_name = checkForImplementedType(type)
     # call rust stub
     @eval hnsw = ccall(
-            $(string("load_hnsw_", rust_type_name), libhnswso),
+            $(string("load_hnswdump_", rust_type_name), libhnswso),
             Ptr{Hnswrs}, # return type
-            (Int64, Ptr{UInt8},Int64, Ptr{UInt8},),
-            UInt64($length(filename)), pointer($filename)
+            (UInt64, Ptr{UInt8}),
+            UInt64(length($filename)), pointer($filename)
         )
 end
