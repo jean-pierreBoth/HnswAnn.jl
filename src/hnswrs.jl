@@ -348,7 +348,7 @@ function getDescription(filename :: String)
     end
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
-    distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distnamet_len); own = true)
+    distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own = true)
     distname = String(distname_u)
     # dump info
     println("Description :")
