@@ -3,7 +3,8 @@ using Test
 
 include("../src/hnswrs.jl")
 
-
+ldpath = "/home/jpboth/Rust/hnswlib-rs/target/debug/"
+setRustlibPath(ldpath)
 
 
 function testdistl1()
