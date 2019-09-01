@@ -307,7 +307,7 @@ struct HnswDescription
     # name of distance
     distname::String
     # pointer on distance function
-    distfunctPtr :: Some{Ptr{Cvoid}}
+    distfunctPtr :: Union{Some{Ptr{Cvoid}} , Nothing}
 end
 
 
@@ -365,7 +365,7 @@ function getDescription(filename :: String)
                     Int64(ffiDescription.ef),
                     Int64(ffiDescription.nb_point),
                     Int64(ffiDescription.data_dimension),
-                    DataType(keytype),
+                    keytype,
                     distname,
                     nothing
     )
