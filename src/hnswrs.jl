@@ -291,7 +291,21 @@ struct LoadHnswDescription
 end
 
 
+"""
+    # struct HnswDescription
 
+    When trying to reload a Hnsw structure from a previous dump
+    it is necessary to known some characteristics of the data dumped.
+    So first a call to getDescription is made, then wth info returnded
+    it is possible to call loadHnsw with the adequate parameters.
+    The parameters necessay to call loadHnsw are:
+
+-   DataType of vectors stored in structure (it also help not inserting
+        different size of data)
+-   The distance name (just now the case of Ptr distance is not treated, The name of distance
+        is set to DistPtr)
+    The others descriptors are just given for information but not necessary.
+"""
 struct HnswDescription
     maxNbConn::Int64
     # number of observed layers
@@ -374,7 +388,7 @@ end
 
 
 """
-    # `function loadHnsw(filename :: String)`
+    # `function loadHnsw(filename :: String, type :: DataType, distname :: String)`
 
     This function reloads data from the 2 files created when dumping data
     the graph and data files.

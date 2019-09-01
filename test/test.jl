@@ -18,16 +18,16 @@ function testdistl1()
     # block // insertion
     datas = rand(Float32, (dim, 500));
     data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
-    parallel_insert(hnsw, data_insert)
+    insert(hnsw, data_insert)
     # one insertion
     v = rand(Float32, dim)
-    one_insert(hnsw, v, UInt(501))    
+    insert(hnsw, v, UInt(501))    
     # testing search
     v1 = rand(Float32, dim)
-    neighbours = one_search(hnsw, v1, 10, 16)
+    neighbours = search(hnsw, v1, 10, 16)
     # testing block // search
     datas = map(i -> rand(Float32, dim), 1:100)
-    neighbours = parallel_search(hnsw, datas, 10, 16)
+    neighbours = search(hnsw, datas, 10, 16)
     true
 end
 
@@ -55,17 +55,17 @@ mydist_ptr = Base.@cfunction(mydist, Cfloat, (Ptr{Cfloat}, Ptr{Cfloat}, Culonglo
 
 function testdistptr()
     dim = 10
-    hnsw = hnswInit(Float32, 8, 16, mydist_ptr)
+    hnsw = createHnswApi(Float32, 8, 16, mydist_ptr)
     # block // insertion
     nbinsert = 100
     for i in 1:nbinsert
         data = rand(Float32, dim);
-        one_insert(hnsw, data, UInt64(i))
+        insert(hnsw, data, UInt64(i))
     end
     # testing search
     println("testing one search")
     v1 = rand(Float32, dim)
-    neighbours = one_search(hnsw, v1, 10, 16)
+    neighbours = search(hnsw, v1, 10, 16)
     true
 end
 
@@ -75,7 +75,7 @@ function testdump()
     hnsw = createHnswApi(Float32, 8, 16, "DistL1")
     # block // insertion
     nbinsert = 500
-    parallel = false
+    parallel = true
     if parallel 
         datas = rand(Float32, (dim, nbinsert));
         data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
@@ -83,7 +83,7 @@ function testdump()
     else
         for i in 1:nbinsert
             data = rand(Float32, dim);
-            one_insert(hnsw, data, UInt64(i))
+            insert(hnsw, data, UInt64(i))
         end       
     end
     #
