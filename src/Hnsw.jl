@@ -14,6 +14,8 @@ export
     insert,
     search,
     fileDump,
+    HnswDescription,
+    getDescription,
     loadHnsw
 
 """

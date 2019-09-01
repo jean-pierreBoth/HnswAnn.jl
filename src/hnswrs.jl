@@ -7,7 +7,7 @@ using Printf
 using Logging
 using Base.CoreLogging
 
-ldpath = "/home/jpboth/Rust/hnswlib-rs/target/debug/"
+
 
 const libhnswso = "libhnsw"
 
@@ -335,8 +335,10 @@ function getDescription(filename :: String)
     end
     #
     ffiDescription  = unsafe_load(description_ptr::Ptr{LoadHnswDescription})
+    @debug " data dimension : " ffiDescription.data_dimension
     typename_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.t_name, NTuple{1,UInt64}(ffiDescription.t_name_len); own = true)
     typename = String(typename_u)
+    @debug "getDescription got typename : " typename
     # get key for typename
     allkeys = collect(keys(implementedTypes))
     keytype = findfirst(x-> implementedTypes[x] == typename , allkeys)
@@ -352,7 +354,7 @@ function getDescription(filename :: String)
     # dump info
     println("Description :")
     println("distance name", distname)
-    println("distance type", typename)   
+    println("data type", typename)   
     #
     HnswDescription(Int64(ffiDescription.max_nb_connection),
                     Int64(ffiDescription.nb_layer),

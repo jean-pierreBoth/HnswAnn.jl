@@ -6,6 +6,11 @@ include("../src/hnswrs.jl")
 ldpath = "/home/jpboth/Rust/hnswlib-rs/target/debug/"
 setRustlibPath(ldpath)
 
+using Logging
+using Base.CoreLogging
+
+logger = ConsoleLogger(stdout, CoreLogging.Debug)
+global_logger(logger)
 
 function testdistl1()
     dim = 10
@@ -69,9 +74,18 @@ function testdump()
     dim = 10
     hnsw = createHnswApi(Float32, 8, 16, "DistL1")
     # block // insertion
-    datas = rand(Float32, (dim, 500));
-    data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
-    insert(hnsw, data_insert)
+    nbinsert = 500
+    parallel = false
+    if parallel 
+        datas = rand(Float32, (dim, nbinsert));
+        data_insert = map(i -> ( rand(Float32, dim) , UInt(i) ), 1:size(datas)[2])
+        insert(hnsw, data_insert)
+    else
+        for i in 1:nbinsert
+            data = rand(Float32, dim);
+            one_insert(hnsw, data, UInt64(i))
+        end       
+    end
     #
     res = fileDump(hnsw, "testdumpfromjulia")
     if res > 0
