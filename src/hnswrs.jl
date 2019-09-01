@@ -27,7 +27,6 @@ function setRustlibPath(path::String)
     push!(Base.DL_LOAD_PATH, path)
 end
 
-setRustlibPath(ldpath)
 
 """
     A structure to encapsulate the Rust structure.
