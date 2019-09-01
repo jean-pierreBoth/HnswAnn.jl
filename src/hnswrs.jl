@@ -302,8 +302,11 @@ struct HnswDescription
     nb_point:: Int64
     # dimesion of data vector
     data_dimension :: Int64
+    # type of vector 
     type :: DataType
+    # name of distance
     distname::String
+    # pointer on distance function
     distfunctPtr :: Some{Ptr{Cvoid}}
 end
 
@@ -346,14 +349,15 @@ function getDescription(filename :: String)
         println("type not implemented : ", typename)
         return nothing
     end
+    @debug " keytype : " keytype
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
     distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own = true)
     distname = String(distname_u)
     # dump info
     println("Description :")
-    println("distance name", distname)
-    println("data type", typename)   
+    println("distance name : ", distname)
+    println("data type : ", typename)   
     #
     HnswDescription(Int64(ffiDescription.max_nb_connection),
                     Int64(ffiDescription.nb_layer),
@@ -362,7 +366,7 @@ function getDescription(filename :: String)
                     Int64(ffiDescription.data_dimension),
                     keytype,
                     distname,
-                    Nothing
+                    nothing
     )
 end
 
