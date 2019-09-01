@@ -343,12 +343,13 @@ function getDescription(filename :: String)
     @debug "getDescription got typename : " typename
     # get key for typename
     allkeys = collect(keys(implementedTypes))
-    keytype = findfirst(x-> implementedTypes[x] == typename , allkeys)
-    if keytype === nothing
+    keyindex = findfirst(x-> implementedTypes[x] == typename , allkeys)
+    if keyindex === nothing
         # this should not occur
         println("type not implemented : ", typename)
         return nothing
     end
+    keytype = allkeys[keyindex]
     @debug " keytype : " keytype
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
@@ -364,7 +365,7 @@ function getDescription(filename :: String)
                     Int64(ffiDescription.ef),
                     Int64(ffiDescription.nb_point),
                     Int64(ffiDescription.data_dimension),
-                    keytype,
+                    DataType(keytype),
                     distname,
                     nothing
     )
