@@ -40,10 +40,10 @@ global_logger(logger)
 """
 # Struct Neighbour.
 
-It contining the id of a neighbour and distance to it.
-When searching for the neighbour of a given point, this struct 
-returns the basic info on a neighbour consisting on its Id and the distance to the query point.
+It contains the id of a neighbour and distance to the query point.
 
+When searching for the neighbour of a given point, this struct is the basic block
+of vector returned by search methods.
 """
 struct Neighbour 
     id :: UInt
@@ -105,19 +105,19 @@ end
 # function hnswInit
 
 ## Args
-* type of data vector.
+- type of data vector.
         The names of types are String and correspond to rust type names i.e
         f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
 
         The subsequent request insertion or search must be made with data corresponding
         to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
 
-* maxNbConn. The maximum number of connection by node
-* search parameter
-* distname
+- maxNbConn. The maximum number of connection by node
+- search parameter
+- distname
 
  ## Return
-    *A pointer to Hnswrs
+    - A pointer to Hnswrs
 
 
 """
@@ -292,13 +292,13 @@ end
 
 
 """
-    # struct HnswDescription
+# struct HnswDescription
 
-    When trying to reload a Hnsw structure from a previous dump
-    it is necessary to known some characteristics of the data dumped.
-    So first a call to getDescription is made, then wth info returnded
-    it is possible to call loadHnsw with the adequate parameters.
-    The parameters necessay to call loadHnsw are:
+When trying to reload a Hnsw structure from a previous dump
+it is necessary to known some characteristics of the data dumped.
+So first a call to getDescription is made, then wth info returnded
+it is possible to call loadHnsw with the adequate parameters.
+The parameters necessay to call loadHnsw are:
 
 -   DataType of vectors stored in structure (it also help not inserting
         different size of data)
@@ -388,12 +388,12 @@ end
 
 
 """
-    # `function loadHnsw(filename :: String, type :: DataType, distname :: String)`
+# `function loadHnsw(filename :: String, type :: DataType, distname :: String)`
 
-    This function reloads data from the 2 files created when dumping data
-    the graph and data files.
-    The filename sent as arg is the base of the names used to dump files in.
-    It does not have the suffixes "hnsw.graph" and "hnsw.data"
+This function reloads data from the 2 files created when dumping data
+the graph and data files.
+The filename sent as arg is the base of the names used to dump files in.
+It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
 """
 function loadHnsw(filename :: String, type :: DataType, distname :: String)
     # append hnsw.graph and load description
