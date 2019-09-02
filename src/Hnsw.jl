@@ -72,7 +72,7 @@ end
 # ` function createHnswApi(type::DataType, maxNbConn::Int64, efConstruction::Int64, distance::Ptr{Cvoid}) `
 
 Create a HnswApi with a custom distance function pointer. In this case the name of the distance 
-is set to "CustomPtr"
+is set to "DistPtr"
 * CAUTION:
 It must be noted that as Julia (for version < 1.3) is not thread safe this api cannot use
 parallel insertion/search in this case although it seems to run in Julia 1.2
@@ -82,7 +82,7 @@ function createHnswApi(type::DataType, maxNbConn::Int64, efConstruction::Int64, 
     rust_type_name = checkForImplementedType(type)
     rust = hnswInit(type, maxNbConn, distance)
     # we store distance to avoid garbage collection of pointer as it is referenced in rust library.
-    HnswApi(rust, type, maxNbConn, efConstruction, "CustomPtr", Some(distance))
+    HnswApi(rust, type, maxNbConn, efConstruction, "DistPtr", Some(distance))
 end
 
 
