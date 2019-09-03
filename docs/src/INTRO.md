@@ -9,10 +9,11 @@ Efficient and Robust approximate nearest neighbours using Hierarchical Navigable
  and different associated standard distances.
 
  T can be instantiated by Float32, UInt8, UInt16, UInt32, Int32.
- Distances can be L1, L2, Cosine for float values and  L1, L2, Hamming and Jaccard for integer values. Moreover the use can define its own distance function by using julia callbacks compile with the macro *@function*
+ Distances can be L1, L2, Cosine and Dot for float values and  L1, L2, Hamming and Jaccard for integer values. Moreover the use can define its own distance function by using julia callbacks compiled with the macro *@function*.
+ (Dot is just the Cosine Distance but vectors are assumed normalized to 1. by user before entering insertion and search methods.)
 
  The implementation relies on a Rust multithreaded, templated library with SIMD avx2 acceleration
- for some couples of type/distances.
+ for Float32 values and L1, L2, and Dot.
 
 ## Rust installation and crate hnsw-rs installation
 

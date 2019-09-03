@@ -14,14 +14,15 @@ const libhnswso = "libhnsw"
 
 # to be called before anything
 """
-# function setRustlibPath
+# initialization of Julia DL_LOAD_PATH
+
+ `function setRustlibPath(path::String)`
 
 This function tells julia where is installed the rust dynamic library implementing the
-    Hnsw algorithm.
-
-The argument is the path to the rust library.
+Hnsw algorithm.
 It must be called after `using Hnsw` and before any function call
 
+The argument is the path to the rust library.
 """
 function setRustlibPath(path::String)
     push!(Base.DL_LOAD_PATH, path)
@@ -81,7 +82,7 @@ end
 
 implementedTypes is a dictionary that has 2 functionalities
 1.  It lists the types on which an instantiation is made for languages others than Rust.
-2.  It enables the mapping to the correct method in rust library by concatenating the type to the
+2.  It enables the mapping to the correct method in rust interface by concatenating the type to the
     name of the method to be called.
 """
 implementedTypes = Dict{DataType, String}()
@@ -103,12 +104,12 @@ end
 """
 
 # function hnswInit
+`function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, distname::String)`
 
 ## Args
 - type of data vector.
         The names of types are String and correspond to rust type names i.e
         f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
-
         The subsequent request insertion or search must be made with data corresponding
         to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
 
@@ -133,6 +134,28 @@ function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, dis
 end
 
 
+
+"""
+
+# function hnswInit
+`function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})`
+
+## Args
+- type of data vector.
+    The names of types are String and correspond to rust type names i.e
+    f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
+    The subsequent request insertion or search must be made with data corresponding
+    to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
+
+- maxNbConn. The maximum number of connection by node
+- search parameter
+- a C-api function pointer to the distance to be used
+
+ ## Return
+    - A pointer to Hnswrs
+
+
+"""
 function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})
     @debug "recieving function ptr : " f
     # check for type
@@ -151,10 +174,12 @@ end
 """
 # one_insert
 
-    The function first checks that it is called for an implemented type.
-    It generates the name of the rust function to be called and
-    passes the call to @eval as we cannot call directly ccall with a 
-    non constant couple (fname, library) Cf Julia manual
+` function one_insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number} `
+
+The function first checks that it is called for an implemented type.
+It generates the name of the rust function to be called and
+passes the call to @eval as we cannot call directly ccall with a 
+non constant couple (fname, library) Cf Julia manual
 """
 function one_insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
     rust_type_name = checkForImplementedType(eltype(data))
@@ -173,6 +198,8 @@ end
 
 """
     # parallel insertion 
+
+` function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number} `
 """
 function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
     # get data type of first field of tuple in datas
@@ -200,7 +227,7 @@ end
 """
 # function one_search
 
-    
+ `  function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}` 
 """
 function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
     rust_type_name = checkForImplementedType(eltype(vector))
@@ -227,6 +254,10 @@ end
 # we must return a Vector{Vector{Neighbour}} , one Vector{Neighbour} per request input
 """
 # parallel_search function
+
+` function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number} `
+
+parallel search of a Vector of Vectors with search parameters.
 """
 function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
     d_type = eltype(eltype(datas))
@@ -351,10 +382,10 @@ function getDescription(filename :: String)
     end
     #
     ffiDescription  = unsafe_load(description_ptr::Ptr{LoadHnswDescription})
-    @debug " data dimension : " ffiDescription.data_dimension
+    @info " data dimension : " ffiDescription.data_dimension
     typename_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.t_name, NTuple{1,UInt64}(ffiDescription.t_name_len); own = true)
     typename = String(typename_u)
-    @debug "getDescription got typename : " typename
+    @info "getDescription got typename : " typename
     # get key for typename
     allkeys = collect(keys(implementedTypes))
     keyindex = findfirst(x-> implementedTypes[x] == typename , allkeys)

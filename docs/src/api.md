@@ -16,6 +16,7 @@ Hnsw.HnswDescription
 ## Functions
 
 ```@docs
+Hnsw.setRustlibPath
 Hnsw.createHnswApi
 Hnsw.insert
 Hnsw.search
