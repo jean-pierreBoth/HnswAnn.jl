@@ -10,7 +10,7 @@ function testdistl1()
     v = rand(Float32, dim)
     insert(hnsw, v, UInt(501))    
     # testing search
-    v1 = rand(Float32, dim)
+    v1 = [Float32(0.5) for i in 1:dim]
     neighbours = search(hnsw, v1, 10, 16)
     # testing block // search
     datas = map(i -> rand(Float32, dim), 1:100)
@@ -51,7 +51,8 @@ function testdistptr()
     end
     # testing search
     println("testing one search")
-    v1 = rand(Float32, dim)
-    neighbours = search(hnsw, v1, 10, 16)
+    v1 = [Float32(0.5) for i in 1:dim]
+    neighbours = search(hnsw, v1, 8, 16)
+    @debug "neighbours : " neighbours
     true
 end
