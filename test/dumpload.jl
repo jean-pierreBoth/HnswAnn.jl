@@ -1,5 +1,6 @@
 
 function testdump()
+    println("\n in testdump")
     dim = 10
     hnsw = createHnswApi(Float32, 8, 16, "DistL1")
     # block // insertion
@@ -31,6 +32,7 @@ end
 
 
 function testreload()
+    println("\n in testreload")
     hnsw2 = loadHnsw("testdumpfromjulia", Float32, "DistL1")
     v1 = [0.5 for i in 1:dim]
     neighbours = search(hnsw2, v1, 8, 16)

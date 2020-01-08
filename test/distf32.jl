@@ -1,5 +1,6 @@
 
 function testdistl1()
+    println("\n in testdistl1")
     dim = 10
     hnsw = createHnswApi(Float32, 8, 16, "DistL1")
     # block // insertion
@@ -41,6 +42,7 @@ mydist_ptr = Base.@cfunction(mydist, Cfloat, (Ptr{Cfloat}, Ptr{Cfloat}, Culonglo
 # test only serial insertion/search until julia 1.3
 
 function testdistptr()
+    println("\n in testdistptr")
     dim = 10
     hnsw = createHnswApi(Float32, 8, 16, mydist_ptr)
     # block // insertion
