@@ -1,5 +1,5 @@
 using Hnsw
-using Base.Test
+#using Test
 
 
 ldpath = "/home/jpboth/Rust/hnswlib-rs/target/debug/"
