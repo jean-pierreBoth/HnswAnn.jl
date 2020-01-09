@@ -19,7 +19,7 @@ include("./distf32.jl")
     @test testdistptr()
 end
 
-include("./dumpreload.jl")
+include("./dumpload.jl")
 @testset "dumpreload" begin
     @test testdump()
     @test testreload()

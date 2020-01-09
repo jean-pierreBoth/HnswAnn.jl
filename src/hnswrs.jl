@@ -366,7 +366,7 @@ end
 This function returns a description of graph stored such as type of data stored (Float32,....)
     type of distance and search parameters.
     Information in data type is necessary to be able to instantiate the rust library and is used 
-    by function loadHnsw(filename :: String)
+    by function loadHnsw(filename :: String, ....)
 """
 function getDescription(filename :: String)
     #
@@ -427,7 +427,7 @@ the graph and data files.
 The filename sent as arg is the base of the names used to dump files in.
 It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
 
-This function returns a couple (HnswDescription, Ptr{Hnswrs})
+This function returns a couple (HnswDescription, )
 """
 function loadHnsw(filename :: String, type :: DataType, distname :: String)
     # append hnsw.graph and load description
@@ -448,5 +448,15 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
             UInt64(length($filename)), pointer($filename)
         )
     #
-    (description, hnsw)
+    maxNbConn = description.max_nb_connection
+    # we do not know how rust constructed it...
+    efConstruction = 0
+    distname_load = description.distname
+    # coherence check
+    if distname_load != distname
+        @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
+        return nothing
+    end
+    HnswApi(rust, type, maxNbConn, efConstruction, distname, nothing)
+    (description, HnswApi)
 end

@@ -35,10 +35,10 @@ function testreload()
     println("\n in testreload")
     # we know type and distance we reload from so we do not need to call 
     # description = getDescription("testdumpfromjulia")
-    description , hnsw2 = loadHnsw("testdumpfromjulia", Float32, "DistL1")
+    description , hnswapi = loadHnsw("testdumpfromjulia", Float32, "DistL1")
     dim = description.data_dimension
     v1 = [Float32(0.5) for i in 1:dim]
-    neighbours = search(hnsw2, v1, 8, 16)
+    neighbours = search(hnswapi, v1, 8, 16)
     @info " 0.5 vector neighbours list : " neighbours
     true
 end

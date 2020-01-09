@@ -28,7 +28,18 @@ curl https://sh.rustup.rs -sSf | sh
 
 * compilation of rust library.
     By default the rust crate builds a static library. The ***Building*** paragraph in the README.md file
-    describes how build the dynamic libray needed for use with Julia.
+    describes how to build the dynamic libray needed for use with Julia.
 
 * Then push the path to this library in Base.DL_LOAD_PATH
 (see this package function setRustlibPath(path::String)
+
+## License
+
+Licensed under either of
+
+* Apache License, Version 2.0, [LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>
+* MIT license [LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>
+
+at your option.
+
+This software was written on my own while working at [CEA](http://www.cea.fr/)
