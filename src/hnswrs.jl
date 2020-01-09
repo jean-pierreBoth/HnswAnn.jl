@@ -97,6 +97,7 @@ function checkForImplementedType(type::DataType)
     if haskey(implementedTypes, type)
         return implementedTypes[type]
     else
+        println("unimplemented type = ", type)
         throw("hnswrs : unimplement type")
     end
 end
@@ -425,6 +426,8 @@ This function reloads data from the 2 files created when dumping data
 the graph and data files.
 The filename sent as arg is the base of the names used to dump files in.
 It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
+
+This function returns a couple (HnswDescription, Ptr{Hnswrs})
 """
 function loadHnsw(filename :: String, type :: DataType, distname :: String)
     # append hnsw.graph and load description
@@ -444,4 +447,6 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
             (UInt64, Ptr{UInt8}),
             UInt64(length($filename)), pointer($filename)
         )
+    #
+    (description, hnsw)
 end

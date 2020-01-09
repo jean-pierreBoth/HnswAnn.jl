@@ -80,7 +80,7 @@ parallel insertion/search in this case although it seems to run in Julia 1.2
 """
 function createHnswApi(type::DataType, maxNbConn::Int64, efConstruction::Int64, distance::Ptr{Cvoid})
     rust_type_name = checkForImplementedType(type)
-    rust = hnswInit(type, maxNbConn, distance)
+    rust = hnswInit(type, maxNbConn, efConstruction, distance)
     # we store distance to avoid garbage collection of pointer as it is referenced in rust library.
     HnswApi(rust, type, maxNbConn, efConstruction, "DistPtr", Some(distance))
 end
