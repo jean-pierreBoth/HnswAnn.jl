@@ -453,7 +453,8 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     efConstruction = 0
     distname_load = description.distname
     # coherence check
-    if distname_load != distname
+    findres = findfirst(distname, distname_load)
+    if findres == nothing
         @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
         return nothing
     end
