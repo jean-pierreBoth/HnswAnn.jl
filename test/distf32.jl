@@ -36,14 +36,14 @@ function mydist(pa::Ptr{Float32}, pb::Ptr{Float32}, l::UInt64)
 end
 
 
-mydist_ptr = Base.@cfunction(mydist, Cfloat, (Ptr{Cfloat}, Ptr{Cfloat}, Culonglong))
 
 
 # test only serial insertion/search until julia 1.3
 
 function testdistptr()
-    println("\n in testdistptr")
+    println("\n\n in testdistptr")
     dim = 10
+    mydist_ptr = Base.@cfunction(mydist, Cfloat, (Ptr{Cfloat}, Ptr{Cfloat}, Culonglong))
     hnsw = createHnswApi(Float32, 8, 16, mydist_ptr)
     # block // insertion
     nbinsert = 100

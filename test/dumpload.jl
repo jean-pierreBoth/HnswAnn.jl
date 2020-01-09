@@ -17,7 +17,7 @@ function testdump()
         end       
     end
     #
-    v1 = [0.5 for i in 1:dim]
+    v1 = [Float32(0.5) for i in 1:dim]
     neighbours = search(hnsw, v1, 8, 16)
     @info " 0.5 vector neighbours list : " neighbours
     #
@@ -33,8 +33,11 @@ end
 
 function testreload()
     println("\n in testreload")
-    hnsw2 = loadHnsw("testdumpfromjulia", Float32, "DistL1")
-    v1 = [0.5 for i in 1:dim]
+    # we know type and distance we reload from so we do not need to call 
+    # description = getDescription("testdumpfromjulia")
+    description , hnsw2 = loadHnsw("testdumpfromjulia", Float32, "DistL1")
+    dim = description.data_dimension
+    v1 = [Float32(0.5) for i in 1:dim]
     neighbours = search(hnsw2, v1, 8, 16)
     @info " 0.5 vector neighbours list : " neighbours
     true
