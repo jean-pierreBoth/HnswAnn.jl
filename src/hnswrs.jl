@@ -458,6 +458,6 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
         @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
         return nothing
     end
-    HnswApi(rust, type, maxNbConn, efConstruction, distname, nothing)
-    (description, HnswApi)
+    hnswapi = HnswApi(hnsw, type, maxNbConn, efConstruction, distname, nothing)
+    (description, hnswapi)
 end
