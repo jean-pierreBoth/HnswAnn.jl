@@ -448,7 +448,7 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
             UInt64(length($filename)), pointer($filename)
         )
     #
-    maxNbConn = description.max_nb_connection
+    maxNbConn = description.maxNbConn
     # we do not know how rust constructed it...
     efConstruction = 0
     distname_load = description.distname
