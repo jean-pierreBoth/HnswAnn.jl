@@ -158,7 +158,7 @@ end
 
 """
 function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})
-    @debug "recieving function ptr : " f
+    @info "recieving function ptr : " f
     # check for type
     rust_type_name = checkForImplementedType(type)
     @eval hnsw = ccall(
@@ -240,11 +240,11 @@ function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search 
         $ptr, UInt(length($vector)), $vector, UInt($knbn), UInt($ef_search)
     )
     # now return a Vector{Neighbourhood}
-    @debug "\n search (rust) returned pointer, will do unsafe_load"  neighbours_ptr
+    # @debug "\n search (rust) returned pointer, will do unsafe_load"  neighbours_ptr
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
-    @debug "\n search rs returned neighbours "  neighbourhood
+    # @debug "\n search rs returned neighbours "  neighbourhood
     neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
-    @debug "neighbours : " neighbours
+    # @debug "neighbours : " neighbours
     # we got Vector{Neighbour}
     return neighbours
 end
@@ -274,14 +274,13 @@ function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64
         (Ref{Hnswrs}, UInt, UInt, Ref{Ptr{$T}}, UInt, UInt),
         $ptr, UInt($nb_vec), UInt($len), $vec_ref, UInt($knbn), UInt($ef_search)
     )
-    @debug "\n parallel_search_neighbours rust returned pointer" neighbourhood_vec_ptr
+    # @debug "\n parallel_search_neighbours rust returned pointer" neighbourhood_vec_ptr
     neighbourhoods_vec = unsafe_load(neighbourhood_vec_ptr::Ptr{NeighbourhoodVect})
-    @debug("\n unwrapping  neighbourhoods_vec")
     neighbourhoods = unsafe_wrap(Array{Neighbourhood,1}, neighbourhoods_vec.neighbourhoods, NTuple{1,Int64}(neighbourhoods_vec.nb_request); own = true)
     neighbourhoods_answer = Vector{Vector{Neighbour}}(undef, nb_vec)
     # now we must unwrap each neighbourhood
     for i in 1:nb_vec
-        @debug "\n unwraping neighbourhood of request " i
+        # @debug "\n unwraping neighbourhood of request " i
         neighbourhoods_answer[i] = unsafe_wrap(Array{Neighbour,1}, neighbourhoods[i].neighbours, NTuple{1,Int64}(neighbourhoods[i].nbgh); own = true)
     end
     #
@@ -396,7 +395,7 @@ function getDescription(filename :: String)
         return nothing
     end
     keytype = allkeys[keyindex]
-    @debug " keytype : " keytype
+    @info " keytype : " keytype
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
     distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own = true)
