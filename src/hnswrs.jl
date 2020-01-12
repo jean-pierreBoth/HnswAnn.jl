@@ -439,7 +439,7 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
         @warn "some error occurred, could not load a coherent description"
         return nothing
     end
-    println!("dimension of data %d", description.data_dimension)
+    println("dimension of data %d", description.data_dimension)
     rust_type_name = checkForImplementedType(type)
     # call rust stub
     @eval hnsw = ccall(
