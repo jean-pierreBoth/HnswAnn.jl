@@ -37,6 +37,7 @@ function testreload()
     # description = getDescription("testdumpfromjulia")
     res = loadHnsw("testdumpfromjulia", Float32, "DistL1")
     if res != nothing
+        println("loadHnsw from file succeeded")
         description , hnswapi = res
     else
         return false

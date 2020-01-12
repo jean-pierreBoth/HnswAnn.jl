@@ -2,7 +2,7 @@ using Hnsw
 using Test
 
 
-ldpath = "/home/jpboth/Rust/hnswlib-rs/target/debug/"
+ldpath = "/home/jpboth/Rust/hnswlib-rs/target/release/"
 setRustlibPath(ldpath)
 
 using Logging
