@@ -42,4 +42,4 @@ Licensed under either of
 
 at your option.
 
-This software was written on my own while working at [CEA](http://www.cea.fr/)
+This software was written on my own while working at [CEA](http://www.cea.fr/), [CEA-LIST](http://www-list.cea.fr/en/)
