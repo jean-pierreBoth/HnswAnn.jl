@@ -9,7 +9,7 @@ using Base.CoreLogging
 
 
 
-const libhnswso = "libhnsw"
+const libhnswso = "libhnsw_rs"
 
 
 # to be called before anything
