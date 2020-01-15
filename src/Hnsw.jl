@@ -74,9 +74,6 @@ end
 
 Create a HnswApi with a custom distance function pointer. In this case the name of the distance 
 is set to "DistPtr"
-* CAUTION:
-It must be noted that as Julia (for version < 1.3) is not thread safe this api cannot use
-parallel insertion/search in this case although it seems to run in Julia 1.2
 
 """
 function createHnswApi(type::DataType, maxNbConn::Int64, efConstruction::Int64, distance::Ptr{Cvoid})
@@ -144,7 +141,7 @@ end
 
 `function search(hnsw::Hnsw , datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}`
 
-As for insertion this function is instersting if we batch sufficiently many request. (some hundreds)
+As for insertion this function is interesting if we batch sufficiently many requests. (some hundreds)
 
 ##  Args
 
