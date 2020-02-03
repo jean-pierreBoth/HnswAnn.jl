@@ -13,13 +13,13 @@ global_logger(logger)
 
 
 
-include("./distf32.jl")
+include("distf32.jl")
 @testset "distf32" begin
     @test testdistl1()
     @test testdistptr()
 end
 
-include("./dumpload.jl")
+include("dumpload.jl")
 @testset "dumpreload" begin
     @test testdump()
     @test testreload()
