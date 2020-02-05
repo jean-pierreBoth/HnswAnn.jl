@@ -7,20 +7,20 @@ Pages = ["api.md"]
 ## Structures
 
 ```@docs
-HnswApi
-Hnsw.Neighbour
-Hnsw.Neighbourhood
-Hnsw.HnswDescription
+HnswAnnApi
+HnswAnn.Neighbour
+HnswAnn.Neighbourhood
+HnswAnn.HnswDescription
 ```
 
 ## Functions
 
 ```@docs
-Hnsw.setRustlibPath
-Hnsw.createHnswApi
-Hnsw.insert
-Hnsw.search
-Hnsw.fileDump
-Hnsw.getDescription
-Hnsw.loadHnsw
+HnswAnn.setRustlibPath
+HnswAnn.createHnswApi
+HnswAnn.insert
+HnswAnn.search
+HnswAnn.fileDump
+HnswAnn.getDescription
+HnswAnn.loadHnsw
 ```

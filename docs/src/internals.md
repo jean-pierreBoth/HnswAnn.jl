@@ -1,10 +1,10 @@
 # internals
 
 ```@docs
-Hnsw.Hnswrs
-Hnsw.hnswInit
-Hnsw.one_insert
-Hnsw.one_search
-Hnsw.parallel_insert
-Hnsw.parallel_search
+HnswAnn.Hnswrs
+HnswAnn.hnswInit
+HnswAnn.one_insert
+HnswAnn.one_search
+HnswAnn.parallel_insert
+HnswAnn.parallel_search
 ```
