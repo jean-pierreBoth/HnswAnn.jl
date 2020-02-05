@@ -2,7 +2,7 @@ push!(LOAD_PATH, "../src/")
 
 DOCUMENTER_DEBUG=true
 
-using Documenter, Hnsw
+using Documenter, HnswAnn
 
 
 makedocs(
