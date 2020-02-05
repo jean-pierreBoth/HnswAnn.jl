@@ -1,5 +1,5 @@
 
-# Hnsw.jl
+# HnswAnn.jl
 
 ```@contents
 Pages = ["INTRO.md", "api.md", "internals.md"]

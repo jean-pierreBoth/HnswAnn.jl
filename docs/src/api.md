@@ -7,7 +7,7 @@ Pages = ["api.md"]
 ## Structures
 
 ```@docs
-HnswAnnApi
+HnswApi
 HnswAnn.Neighbour
 HnswAnn.Neighbourhood
 HnswAnn.HnswDescription

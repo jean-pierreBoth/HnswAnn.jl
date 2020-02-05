@@ -1,5 +1,5 @@
 
-# Hnsw.jl
+# HnswAnn.jl
 
  **This package provides an interface to a rust implementation of the paper by Yu. A. Malkov and D. A. Yashunin: \
 "Efficient and Robust approximate nearest neighbours using Hierarchical Navigable Small World Graphs" (2016, 2018)**
