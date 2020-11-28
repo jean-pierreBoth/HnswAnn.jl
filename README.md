@@ -8,13 +8,15 @@
  (i.e Vector{T} where T <: Number)
  and different associated standard distances.
 
- T can be instantiated by Float32, UInt8, UInt16, UInt32, Int32.  
- Distances can be L1, L2, Cosine and Dot for float values and  L1, L2, Hamming and Jaccard for integer values. It is also possible one's own distance function by using julia callbacks compiled with the macro *@function*.  
+ T can be instantiated by Float32, UInt8, UInt16, UInt32, Int32 depending on the distance.
+ Distances can be L1, L2, Cosine, Dot, Hamming, Jaccard, JensenShannon. It is also possible to define one's own distance function by sending julia callbacks compiled with the macro *@function* to the Rust library.  
 
 * Note : Dot is just the Cosine Distance but vectors are assumed normalized to 1. by user before entering insertion and search methods.
 
  The implementation relies on a Rust multithreaded, templated library with SIMD avx2 acceleration
  for Float32 values and L1, L2, and Dot.
+
+ It is mainly dedicated to Rust users needing an interactive access to their data. In any case hnsw is one of the best Ann algorithm (See [Ann-Benchmark](http://ann-benchmarks.com/))
 
 ## Rust installation and crate hnsw-rs installation
 
@@ -31,6 +33,9 @@ curl https://sh.rustup.rs -sSf | sh
 
 * Then push the path to the library *libhnsw_rs.so* in Base.DL_LOAD_PATH
 (see this package function setRustlibPath(path::String)
+
+* Logging for the Rust library can be initialized from Julia with the function *initRustLog*.
+    It uses env_logger.
 
 ## License
 

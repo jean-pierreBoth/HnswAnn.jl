@@ -30,6 +30,21 @@ end
 
 
 """
+# initRustLog
+
+initialize the log system of Rust by environment.
+"""
+function initRustLog()
+# use of macro eval makes possible the use of the variable libhnswso
+@eval ccall($("init_rust_log", libhnswso),
+            Cvoid,
+            (),
+    )
+end
+
+
+
+"""
     A structure to encapsulate the Rust structure.
 """
 mutable struct Hnswrs
@@ -288,7 +303,6 @@ function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64
 end
 
 
-
 function filedump(ptr::Ref{Hnswrs}, d_type :: DataType, filename::String)
     rust_type_name = checkForImplementedType(d_type)
     resdump = @eval ccall(
@@ -327,7 +341,7 @@ end
 
 When trying to reload a Hnsw structure from a previous dump
 it is necessary to known some characteristics of the data dumped.
-So first a call to getDescription is made, then wth info returnded
+So first a call to getDescription is made, then with info returnded
 it is possible to call loadHnsw with the adequate parameters.
 The parameters necessay to call loadHnsw are:
 
@@ -426,7 +440,7 @@ the graph and data files.
 The filename sent as arg is the base of the names used to dump files in.
 It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
 
-This function returns a couple (HnswDescription, )
+This function returns a couple (HnswDescription, HnswApi)
 """
 function loadHnsw(filename :: String, type :: DataType, distname :: String)
     # append hnsw.graph and load description
@@ -454,7 +468,7 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     distname_load = description.distname
     # coherence check
     findres = findfirst(distname, distname_load)
-    if findres == nothing
+    if findres === nothing
         @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
         return nothing
     end

@@ -9,7 +9,8 @@
  and different associated standard distances.
 
  T can be instantiated by Float32, UInt8, UInt16, UInt32, Int32.  
- Distances can be L1, L2, Cosine and Dot for float values and  L1, L2, Hamming and Jaccard for integer values. It is also possible one's own distance function by using julia callbacks compiled with the macro *@function*.  
+ Distances can be L1, L2, Cosine, Dot, L1, L2, Hamming, Jaccard, JensenShannon. 
+ It is also possible one's own distance function by using julia callbacks compiled with the macro *@function*.  
 
 * Note : Dot is just the Cosine Distance but vectors are assumed normalized to 1. by user before entering insertion and search methods.
 
@@ -31,17 +32,6 @@ curl https://sh.rustup.rs -sSf | sh
 
 * Then push the path to the library *libhnsw_rs.so* in Base.DL\_LOAD\_PATH
 (see this package function setRustlibPath(path::String)
-
-## License
-
-Licensed under either of
-
-* Apache License, Version 2.0, LICENSE-APACHE <http://www.apache.org/licenses/LICENSE-2.0>
-* MIT license LICENSE-MIT  <http://opensource.org/licenses/MIT>
-
-at your option.
-
-This software was written on my own while working at [CEA](http://www.cea.fr/), [CEA-LIST](http://www-list.cea.fr/en/)
 
 ## Algorithm and Input Parameters
 

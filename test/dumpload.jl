@@ -36,7 +36,7 @@ function testreload()
     # we know type and distance we reload from so we do not need to call 
     # description = getDescription("testdumpfromjulia")
     res = loadHnsw("testdumpfromjulia", Float32, "DistL1")
-    if res != nothing
+    if res !== nothing
         println("loadHnsw from file succeeded")
         description , hnswapi = res
     else
