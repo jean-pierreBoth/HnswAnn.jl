@@ -1,7 +1,7 @@
 name = "HnswAnn"
 uuid = "dff2f42d-5506-450f-a8d7-e8287f476a07"
 author = ["Jean-Pierre Both <jeanpierre.both@gmail.com>"]
-version = "0.0.1"
+version = "0.1.0"
 
 [compat]
 julia = "1"
