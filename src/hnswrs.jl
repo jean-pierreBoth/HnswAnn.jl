@@ -120,18 +120,29 @@ end
 """
 
 # function hnswInit
+
 `function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, distname::String)`
 
 ## Args
-- type of data vector.
-        The names of types are String and correspond to rust type names i.e
-        f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
+- type of data vector: UInt32, UInt16, UInt8 , Float32
+        These types are mapped to String corresponding to 
+        rust type names by the interface in the dictionary implementedTypes.
         The subsequent request insertion or search must be made with data corresponding
         to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
 
 - maxNbConn. The maximum number of connection by node
 - search parameter
-- distname
+- distname : names of distances as recognized by the Julia Rust interface
+    - "DistL1" 
+    - "DistL2"
+    - "DistJaccard"
+    - "DistHamming"
+    - "DistCosine"
+    - "DistDot"
+    - "DistLevenhstein"
+    - "DistJensenShannon"
+    
+    Types and distance must be in adequation
 
  ## Return
     - A pointer to Hnswrs
@@ -157,9 +168,12 @@ end
 `function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})`
 
 ## Args
-- type of data vector.
-    The names of types are String and correspond to rust type names i.e
-    f32, i32, u16, u8. So the type arg are "f32" , "i32" and so on.
+- datatype can be one of :
+- UInt8
+- UInt32
+- UInt16
+    The Julia DataType is converted to Rust type  i.e
+    f32, i32, u16, u8. So the type arg a.
     The subsequent request insertion or search must be made with data corresponding
     to the type used in initialization of Hnsw_api. The rust library will panic otherwise.
 
@@ -440,6 +454,20 @@ the graph and data files.
 The filename sent as arg is the base of the names used to dump files in.
 It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
 
+- datatype can be one of :
+    - UInt8
+    - UInt32
+    - UInt16
+
+- distnames can be one of :
+    - DistL1
+    - DistL2
+    - DistHamming
+    - DistJaccard
+    - DistCosine
+    - DistDot
+
+
 This function returns a couple (HnswDescription, HnswApi)
 """
 function loadHnsw(filename :: String, type :: DataType, distname :: String)
@@ -452,7 +480,7 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
         @warn "some error occurred, could not load a coherent description"
         return nothing
     end
-    println("dimension of data %d", description.data_dimension)
+    println("dimension of data :", description.data_dimension)
     rust_type_name = checkForImplementedType(type)
     # call rust stub
     @eval hnsw = ccall(
