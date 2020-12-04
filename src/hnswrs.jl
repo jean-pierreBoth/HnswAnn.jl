@@ -460,12 +460,12 @@ It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
     - UInt16
 
 - distnames can be one of :
-    - DistL1
-    - DistL2
-    - DistHamming
-    - DistJaccard
-    - DistCosine
-    - DistDot
+    - "DistL1"
+    - "DistL2"
+    - "DistHamming"
+    - "DistJaccard"
+    - "DistCosine"
+    - "DistDot"
 
 
 This function returns a couple (HnswDescription, HnswApi)
@@ -484,7 +484,7 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     rust_type_name = checkForImplementedType(type)
     # call rust stub
     @eval hnsw = ccall(
-            $(string("load_hnswdump_", rust_type_name), libhnswso),
+            $(string("load_hnswdump_", rust_type_name, "_", distname), libhnswso),
             Ptr{Hnswrs}, # return type
             (UInt64, Ptr{UInt8}),
             UInt64(length($filename)), pointer($filename)
