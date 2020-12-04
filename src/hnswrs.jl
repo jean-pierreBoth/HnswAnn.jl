@@ -318,7 +318,9 @@ end
 
 
 function filedump(ptr::Ref{Hnswrs}, d_type :: DataType, filename::String)
+    @info " julia : filedump : " filename
     rust_type_name = checkForImplementedType(d_type)
+    @info " julia : dumping for rust type : " rust_type_name
     resdump = @eval ccall(
         $(string("file_dump_", rust_type_name), libhnswso),
         Clonglong,
