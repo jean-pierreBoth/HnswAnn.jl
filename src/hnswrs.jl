@@ -107,6 +107,17 @@ implementedTypes[UInt16] = "u16"
 implementedTypes[Int32] = "i32"
 implementedTypes[UInt32] = "u32"
 
+# a hack to enable reload from rust when typename given by Rust is not known but the user
+# knows the data type in nodes 
+# In this case the user can give the typename as keyboard input. 
+implementedTypeNames = Dict{String, DataType}()
+implementedTypeNames["UInt32"] = UInt32
+implementedTypeNames["Int32"] = Int32
+implementedTypeNames["UInt8"] = UInt8
+implementedTypeNames["UInt16"] = UInt16
+implementedTypeNames["Float32"] = Float32
+
+
 
 function checkForImplementedType(type::DataType)
     if haskey(implementedTypes, type)
@@ -172,6 +183,7 @@ end
 - UInt8
 - UInt32
 - UInt16
+- Float32
     The Julia DataType is converted to Rust type  i.e
     f32, i32, u16, u8. So the type arg a.
     The subsequent request insertion or search must be made with data corresponding
@@ -378,7 +390,7 @@ struct HnswDescription
     # dimesion of data vector
     data_dimension :: Int64
     # type of vector 
-    type :: DataType
+    type :: Some{DataType} 
     # name of distance
     distname::String
     # pointer on distance function
@@ -420,12 +432,25 @@ function getDescription(filename :: String)
     allkeys = collect(keys(implementedTypes))
     keyindex = findfirst(x-> implementedTypes[x] == typename , allkeys)
     if keyindex === nothing
-        # this should not occur
+        # this can happen if we reload from Rust user specific type
+        # that reduces to Vector of known types (for examples objects hashed with probminhash)
         println("type not implemented : ", typename)
-        return nothing
+        println(" enter a type name : ")
+        name = readline()
+        println("entered name : $name")
+        # check in implementedTypeNames
+        foundname = findfirst(x -> x == name, collect(keys(implementedTypeNames)))
+        if !isnothing(foundname)
+            keytype = implementedTypeNames[name]
+            @info " keytype : " keytype
+        else
+            println(" name not found")
+            return nothing
+        end
+    else 
+        keytype = allkeys[keyindex]
+        @info " keytype : " keytype
     end
-    keytype = allkeys[keyindex]
-    @info " keytype : " keytype
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
     distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own = true)
@@ -460,14 +485,17 @@ It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
     - UInt8
     - UInt32
     - UInt16
+    - Float32
 
-- distnames can be one of :
+- distnames can be one of (depending on the datatype):
     - "DistL1"
     - "DistL2"
     - "DistHamming"
     - "DistJaccard"
     - "DistCosine"
     - "DistDot"
+    - "DistLevenhstein"
+    - "DistJensenShannon"
 
 
 This function returns a couple (HnswDescription, HnswApi)

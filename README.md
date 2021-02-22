@@ -4,7 +4,7 @@
  **This package provides an interface to a Rust implementation of the paper by Yu. A. Malkov and D. A. Yashunin: \
 "Efficient and Robust approximate nearest neighbours using Hierarchical Navigable Small World Graphs" (2016, 2018)**
 
-It can be useful Rust users of the crate [hnsw_rs](https://gitlab.com/jpboth/hnswlib-rs) needing an interactive access to their data, but can be useful to Julia users needing a "metal" implementation.
+It can be useful to Rust users of the crate [hnsw_rs](https://gitlab.com/jpboth/hnswlib-rs) needing an interactive access to their data, but can be useful to Julia users needing a "metal" implementation.
 
 The package provides Approximate Near Neighbour search for Vector of numeric types
 (i.e Vector{T} where T <: Number) and different associated standard distances.
@@ -34,7 +34,7 @@ curl https://sh.rustup.rs -sSf | sh
     By default the rust crate builds a static library. The ***Building*** paragraph in the README.md file of the rust crate, describes how to build the dynamic libray needed for use with Julia.
 
 * Then push the path to the library *libhnsw_rs.so* in Base.DL_LOAD_PATH
-(see this package function setRustlibPath(path::String)
+(see this package function setRustlibPath(path::String).
 
 * Logging for the Rust library can be initialized from Julia with the function *initRustLog*.
     It uses env_logger.
