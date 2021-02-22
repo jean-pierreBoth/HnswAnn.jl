@@ -390,7 +390,7 @@ struct HnswDescription
     # dimesion of data vector
     data_dimension :: Int64
     # type of vector 
-    type :: Some{DataType} 
+    type :: DataType
     # name of distance
     distname::String
     # pointer on distance function
