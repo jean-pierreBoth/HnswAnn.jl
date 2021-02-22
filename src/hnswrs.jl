@@ -393,8 +393,11 @@ struct HnswDescription
     type :: DataType
     # name of distance
     distname::String
+    # enables reloading types described interactively by user
+    interactive :: Bool
     # pointer on distance function
     distfunctPtr :: Union{Some{Ptr{Cvoid}} , Nothing}
+
 end
 
 
@@ -431,7 +434,9 @@ function getDescription(filename :: String)
     # get key for typename
     allkeys = collect(keys(implementedTypes))
     keyindex = findfirst(x-> implementedTypes[x] == typename , allkeys)
+    interactive = false
     if keyindex === nothing
+        interactive = true
         # this can happen if we reload from Rust user specific type
         # that reduces to Vector of known types (for examples objects hashed with probminhash)
         println("type not implemented : ", typename)
@@ -467,6 +472,7 @@ function getDescription(filename :: String)
                     Int64(ffiDescription.data_dimension),
                     keytype,
                     distname,
+                    interactive,
                     nothing
     )
 end
@@ -528,7 +534,9 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     findres = findfirst(distname, distname_load)
     if findres === nothing
         @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
-        return nothing
+        if !description.interactive
+             return nothing
+        end
     end
     hnswapi = HnswApi(hnsw, type, maxNbConn, efConstruction, distname, nothing)
     (description, hnswapi)
