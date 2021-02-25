@@ -99,6 +99,9 @@ implementedTypes is a dictionary that has 2 functionalities
 1.  It lists the types on which an instantiation is made for languages others than Rust.
 2.  It enables the mapping to the correct method in rust interface by concatenating the type to the
     name of the method to be called.
+
+The NoData type is a Rust unit structure used when reloading only the graph of the Ann.
+In this case no query can be done on the Hnsw structure
 """
 implementedTypes = Dict{DataType, String}()
 implementedTypes[Float32] = "f32"
@@ -106,6 +109,8 @@ implementedTypes[UInt8] = "u8"
 implementedTypes[UInt16] = "u16"
 implementedTypes[Int32] = "i32"
 implementedTypes[UInt32] = "u32"
+implementedTypes[Nothing] = "NoData"
+
 
 # a hack to enable reload from rust when typename given by Rust is not known but the user
 # knows the data type in nodes 
@@ -116,6 +121,8 @@ implementedTypeNames["Int32"] = Int32
 implementedTypeNames["UInt8"] = UInt8
 implementedTypeNames["UInt16"] = UInt16
 implementedTypeNames["Float32"] = Float32
+implementedTypeNames["Nothing"] = Nothing
+
 
 
 
@@ -152,6 +159,7 @@ end
     - "DistDot"
     - "DistLevenhstein"
     - "DistJensenShannon"
+    - "DistNoDist"
     
     Types and distance must be in adequation
 
@@ -393,8 +401,6 @@ struct HnswDescription
     type :: DataType
     # name of distance
     distname::String
-    # enables reloading types described interactively by user
-    interactive :: Bool
     # pointer on distance function
     distfunctPtr :: Union{Some{Ptr{Cvoid}} , Nothing}
 
@@ -411,6 +417,7 @@ This function returns a description of graph stored such as type of data stored 
     type of distance and search parameters.
     Information in data type is necessary to be able to instantiate the rust library and is used 
     by function loadHnsw(filename :: String, ....)
+    typename and distancename transmitted are those know to Rust
 """
 function getDescription(filename :: String)
     #
@@ -434,34 +441,30 @@ function getDescription(filename :: String)
     # get key for typename
     allkeys = collect(keys(implementedTypes))
     keyindex = findfirst(x-> implementedTypes[x] == typename , allkeys)
-    interactive = false
+    graphOnly = false
     if keyindex === nothing
-        interactive = true
+        graphOnly = true
         # this can happen if we reload from Rust user specific type
         # that reduces to Vector of known types (for examples objects hashed with probminhash)
         println("type not implemented : ", typename)
-        println(" enter a type name : ")
-        name = readline()
-        println("entered name : $name")
-        # check in implementedTypeNames
-        foundname = findfirst(x -> x == name, collect(keys(implementedTypeNames)))
-        if !isnothing(foundname)
-            keytype = implementedTypeNames[name]
-            @info " keytype : " keytype
-        else
-            println(" name not found")
-            return nothing
-        end
+        println("using NoData type and loading only the graph part of the data")
+        @warn "typename asked for is not corresponding to any declared valid type"
+        @warn "loading only graph part of data"
+        typename = "NoData"
     else 
         keytype = allkeys[keyindex]
-        @info " keytype : " keytype
+        @info " keytype : " keytype 
     end
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
     distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own = true)
     distname = String(distname_u)
+    if graphOnly
+        # if graphOnly we set distance to NoDist
+        distname = "DistNoDist"
+    end
     # dump info
-    println("Description :")
+    println("Description generated :")
     println("distance name : ", distname)
     println("data type : ", typename)   
     #
@@ -472,7 +475,6 @@ function getDescription(filename :: String)
                     Int64(ffiDescription.data_dimension),
                     keytype,
                     distname,
-                    interactive,
                     nothing
     )
 end
@@ -492,6 +494,12 @@ It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
     - UInt32
     - UInt16
     - Float32
+    - Nothing
+
+The type Nothing makes only sense when reloading a previous dump and we want
+only to reload the graph part of the dump. It must be associated to the DistNoDist distance
+as no query will be possible with the Nothing type of data
+
 
 - distnames can be one of (depending on the datatype):
     - "DistL1"
@@ -502,6 +510,7 @@ It does not have the suffixes ".hnsw.graph" and ".hnsw.data"
     - "DistDot"
     - "DistLevenhstein"
     - "DistJensenShannon"
+    - "DistNoDist"
 
 
 This function returns a couple (HnswDescription, HnswApi)
@@ -532,10 +541,14 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     distname_load = description.distname
     # coherence check
     findres = findfirst(distname, distname_load)
-    if findres === nothing
-        @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
-        if !description.interactive
-             return nothing
+    if findres === nothing 
+        # We can accept thid only if type is Nothing meaning we reload only graph.
+        if type !== Nothing
+            @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
+            return nothing
+        else
+            # in fact if type is Nothing, distname was already set to DistNoDist in getDescription
+            distname = "DistNoDist"
         end
     end
     hnswapi = HnswApi(hnsw, type, maxNbConn, efConstruction, distname, nothing)
