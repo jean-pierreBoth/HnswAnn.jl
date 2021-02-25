@@ -451,6 +451,7 @@ function getDescription(filename :: String)
         @warn "typename asked for is not corresponding to any declared valid type"
         @warn "loading only graph part of data"
         typename = "NoData"
+        keytype = Nothing
     else 
         keytype = allkeys[keyindex]
         @info " keytype : " keytype 
