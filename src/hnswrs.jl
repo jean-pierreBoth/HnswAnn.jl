@@ -159,7 +159,7 @@ end
 function getHnswio(filename::String)
     hnswio = ccall(("get_hnswio", libhnswso),
         Ptr{HnswIoApi}, # return type
-        (Int64, Ptr{UInt8},),
+        (UInt64, Ptr{UInt8},),
         (UInt64(length(filename)), pointer(filename),)
     )
 end
