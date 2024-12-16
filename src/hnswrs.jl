@@ -564,7 +564,7 @@ function loadHnsw(filename::String, type::DataType, distname::String)
         $(string("load_hnswdump_", rust_type_name, "_", distname), libhnswso),
         Ptr{Hnswrs}, # return type
         (Ref{HnswIoApi},),
-        hnswio
+        $hnswio
     )
     #
     println("returned from load_hnswdump_")
