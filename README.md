@@ -15,7 +15,7 @@ It is also possible to define one's own distance function by sending Julia callb
 
 * Note : Dot is just the Cosine Distance but vectors are assumed normalized to 1. by user before entering insertion and search methods.
 
-The implementation relies on a Rust multithreaded, templated library with SIMD avx2 acceleration
+The implementation relies on a Rust multithreaded, templated library with SIMD avx2,avx512 acceleration
 for Float32 values and L1, L2, and Dot.
 
 It also provides dump/reload utilities.
@@ -33,8 +33,8 @@ curl https://sh.rustup.rs -sSf | sh
 * compilation of rust library.
     By default the rust crate builds a static library. The ***Building*** paragraph in the README.md file of the rust crate, describes how to build the dynamic libray needed for use with Julia.
 
-* Then push the path to the library *libhnsw_rs.so* in Base.DL_LOAD_PATH
-(see this package function setRustlibPath(path::String).
+* Then push the path to the library *libhnsw_rs.so* in Base.DL_LOAD_PATH  
+(see this package function setRustlibPath(path::String) and tests).
 
 * Logging for the Rust library can be initialized from Julia with the function *initRustLog*.
     It uses env_logger.
@@ -48,4 +48,3 @@ Licensed under either of
 
 at your option.
 
-This software was written on my own while working at [CEA](http://www.cea.fr/)
