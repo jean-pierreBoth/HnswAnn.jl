@@ -3,3 +3,4 @@ docs/build
 *.html
 testdump*
 NoteBook
+test/testdump*
