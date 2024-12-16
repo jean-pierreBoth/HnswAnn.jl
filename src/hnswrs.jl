@@ -35,10 +35,10 @@ end
 initialize the log system of Rust by environment.
 """
 function initRustLog()
-# use of macro eval makes possible the use of the variable libhnswso
-@eval ccall($("init_rust_log", libhnswso),
-            Cvoid,
-            (),
+    # use of macro eval makes possible the use of the variable libhnswso
+    @eval ccall($("init_rust_log", libhnswso),
+        Cvoid,
+        (),
     )
 end
 
@@ -49,6 +49,15 @@ end
 """
 mutable struct Hnswrs
 end
+
+
+"""
+    A structure to encapsulate HnswIoApi needed for reloading a Hnsw
+"""
+
+mutable struct HnswIoApi
+end
+
 
 logger = ConsoleLogger(stdout, CoreLogging.Debug)
 global_logger(logger)
@@ -61,9 +70,9 @@ It contains the id of a neighbour and distance to the query point.
 When searching for the neighbour of a given point, this struct is the basic block
 of vector returned by search methods.
 """
-struct Neighbour 
-    id :: UInt
-    dist :: Float32
+struct Neighbour
+    id::UInt
+    dist::Float32
 end
 
 
@@ -74,9 +83,9 @@ A pointer to Neighbours
 Structure returned by request searchNeighbour
 
 """
-struct Neighbourhood 
-    nbgh :: Int64
-    neighbours :: Ptr{Neighbour}
+struct Neighbourhood
+    nbgh::Int64
+    neighbours::Ptr{Neighbour}
 end
 
 
@@ -87,8 +96,8 @@ end
  To retrive answer to parallel search of neigbourhood.
 """
 struct NeighbourhoodVect
-    nb_request :: UInt
-    neighbourhoods :: Ptr{Neighbourhood}
+    nb_request::UInt
+    neighbourhoods::Ptr{Neighbourhood}
 end
 
 
@@ -103,7 +112,7 @@ implementedTypes is a dictionary that has 2 functionalities
 The NoData type is a Rust unit structure used when reloading only the graph of the Ann.
 In this case no query can be done on the Hnsw structure
 """
-implementedTypes = Dict{DataType, String}()
+implementedTypes = Dict{DataType,String}()
 implementedTypes[Float32] = "f32"
 implementedTypes[UInt8] = "u8"
 implementedTypes[UInt16] = "u16"
@@ -115,7 +124,7 @@ implementedTypes[Nothing] = "NoData"
 # a hack to enable reload from rust when typename given by Rust is not known but the user
 # knows the data type in nodes 
 # In this case the user can give the typename as keyboard input. 
-implementedTypeNames = Dict{String, DataType}()
+implementedTypeNames = Dict{String,DataType}()
 implementedTypeNames["UInt32"] = UInt32
 implementedTypeNames["Int32"] = Int32
 implementedTypeNames["UInt8"] = UInt8
@@ -133,6 +142,26 @@ function checkForImplementedType(type::DataType)
         println("unimplemented type = ", type)
         throw("hnswrs : unimplement type")
     end
+end
+
+"""
+# function getHnswio
+
+`function getHnswio(filename::String)`
+
+## Args
+- filename used to find files to reload (supposed to be in current directory)
+
+## Return
+- A pointer to HnswIoApi
+"""
+
+function getHnswio(filename::String)
+    hnswio = ccall(("get_hnswio", libhnswso),
+        Ptr{HnswIoApi}, # return type
+        (Int64, Ptr{UInt8},),
+        (UInt64(length(filename)), pointer(filename),)
+    )
 end
 
 """
@@ -168,15 +197,15 @@ end
 
 
 """
-function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, distname::String)
+function hnswInit(type::DataType, maxNbConn::Int64, efConstruction::Int64, distname::String)
     # check for type
     rust_type_name = checkForImplementedType(type)
     @eval hnsw = ccall(
-            $(string("init_hnsw_", rust_type_name), libhnswso),
-            Ptr{Hnswrs}, # return type
-            (UInt64, UInt64, Int64, Ptr{UInt8},),
-            UInt64($maxNbConn), UInt64($efConstruction), UInt64(length($distname)), pointer($distname)
-        )
+        $(string("init_hnsw_", rust_type_name), libhnswso),
+        Ptr{Hnswrs}, # return type
+        (UInt64, UInt64, Int64, Ptr{UInt8},),
+        UInt64($maxNbConn), UInt64($efConstruction), UInt64(length($distname)), pointer($distname)
+    )
 end
 
 
@@ -206,7 +235,7 @@ end
 
 
 """
-function hnswInit(type :: DataType, maxNbConn::Int64, efConstruction::Int64, f :: Ptr{Cvoid})
+function hnswInit(type::DataType, maxNbConn::Int64, efConstruction::Int64, f::Ptr{Cvoid})
     @info "recieving function ptr : " f
     # check for type
     rust_type_name = checkForImplementedType(type)
@@ -231,7 +260,7 @@ It generates the name of the rust function to be called and
 passes the call to @eval as we cannot call directly ccall with a 
 non constant couple (fname, library) Cf Julia manual
 """
-function one_insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T <: Number}
+function one_insert(ptr::Ref{Hnswrs}, data::Vector{T}, id::UInt64) where {T<:Number}
     rust_type_name = checkForImplementedType(eltype(data))
     @eval ccall(
         $(string("insert_", rust_type_name), libhnswso),
@@ -251,17 +280,17 @@ end
 
 ` function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number} `
 """
-function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T}, UInt}}) where {T <: Number}
+function parallel_insert(ptr::Ref{Hnswrs}, datas::Vector{Tuple{Vector{T},UInt}}) where {T<:Number}
     # get data type of first field of tuple in datas
-    d_type = eltype(fieldtype(eltype(datas),1))
+    d_type = eltype(fieldtype(eltype(datas), 1))
     rust_type_name = checkForImplementedType(d_type)
     # split vector of tuple 
     nb_vec = length(datas)
     # get length of first component of first data (i.e dim of first vector)
     dim = length(datas[1][1])
     # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
-    vec_ref = map(x-> pointer(x[1]), datas)
-    ids_ref = map(x-> x[2], datas)
+    vec_ref = map(x -> pointer(x[1]), datas)
+    ids_ref = map(x -> x[2], datas)
     @eval neighbourhood_vec_ptr = ccall(
         $(string("parallel_insert_", rust_type_name), libhnswso),
         Cvoid,
@@ -279,7 +308,7 @@ end
 
  `  function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}` 
 """
-function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search ::Int64) where {T<:Number}
+function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search::Int64) where {T<:Number}
     rust_type_name = checkForImplementedType(eltype(vector))
     #
     @eval neighbours_ptr = ccall(
@@ -292,7 +321,7 @@ function one_search(ptr::Ref{Hnswrs}, vector::Vector{T}, knbn::Int64, ef_search 
     # @debug "\n search (rust) returned pointer, will do unsafe_load"  neighbours_ptr
     neighbourhood = unsafe_load(neighbours_ptr::Ptr{Neighbourhood})
     # @debug "\n search rs returned neighbours "  neighbourhood
-    neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int64}(neighbourhood.nbgh); own = true)
+    neighbours = unsafe_wrap(Array{Neighbour,1}, neighbourhood.neighbours, NTuple{1,Int64}(neighbourhood.nbgh); own=true)
     # @debug "neighbours : " neighbours
     # we got Vector{Neighbour}
     return neighbours
@@ -309,14 +338,14 @@ end
 
 parallel search of a Vector of Vectors with search parameters.
 """
-function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64, ef_search:: Int64) where {T<:Number}
+function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64, ef_search::Int64) where {T<:Number}
     d_type = eltype(eltype(datas))
     rust_type_name = checkForImplementedType(d_type)
     #
     nb_vec = length(datas)
     len = length(datas[1])
     # make a Vector{Ref{Float32}} where each ptr is a ref to datas[i] memory beginning
-    vec_ref = map(x-> pointer(x), datas)
+    vec_ref = map(x -> pointer(x), datas)
     @eval neighbourhood_vec_ptr = ccall(
         $(string("parallel_search_neighbours_", rust_type_name), libhnswso),
         Ptr{NeighbourhoodVect},
@@ -325,19 +354,19 @@ function parallel_search(ptr::Ref{Hnswrs}, datas::Vector{Vector{T}}, knbn::Int64
     )
     # @debug "\n parallel_search_neighbours rust returned pointer" neighbourhood_vec_ptr
     neighbourhoods_vec = unsafe_load(neighbourhood_vec_ptr::Ptr{NeighbourhoodVect})
-    neighbourhoods = unsafe_wrap(Array{Neighbourhood,1}, neighbourhoods_vec.neighbourhoods, NTuple{1,Int64}(neighbourhoods_vec.nb_request); own = true)
+    neighbourhoods = unsafe_wrap(Array{Neighbourhood,1}, neighbourhoods_vec.neighbourhoods, NTuple{1,Int64}(neighbourhoods_vec.nb_request); own=true)
     neighbourhoods_answer = Vector{Vector{Neighbour}}(undef, nb_vec)
     # now we must unwrap each neighbourhood
     for i in 1:nb_vec
         # @debug "\n unwraping neighbourhood of request " i
-        neighbourhoods_answer[i] = unsafe_wrap(Array{Neighbour,1}, neighbourhoods[i].neighbours, NTuple{1,Int64}(neighbourhoods[i].nbgh); own = true)
+        neighbourhoods_answer[i] = unsafe_wrap(Array{Neighbour,1}, neighbourhoods[i].neighbours, NTuple{1,Int64}(neighbourhoods[i].nbgh); own=true)
     end
     #
     return neighbourhoods_answer
 end
 
 
-function filedump(ptr::Ref{Hnswrs}, d_type :: DataType, filename::String)
+function filedump(ptr::Ref{Hnswrs}, d_type::DataType, filename::String)
     @info " julia : filedump : " filename
     rust_type_name = checkForImplementedType(d_type)
     @info " julia : dumping for rust type : " rust_type_name
@@ -352,23 +381,23 @@ end
 
 
 struct LoadHnswDescription
-    dumpmode :: UInt8
+    dumpmode::UInt8
     #max number of connections in layers != 0
-    max_nb_connection :: UInt8
+    max_nb_connection::UInt8
     # number of observed layers
-    nb_layer :: UInt8
+    nb_layer::UInt8
     # search parameter
-    ef :: UInt64
+    ef::UInt64
     # total number of points
-    nb_point:: UInt64
+    nb_point::UInt64
     # dimesion of data vector
-    data_dimension :: UInt64
+    data_dimension::UInt64
     # length and pointer on dist name
-    distname_len :: UInt64
-    distname :: Ptr{UInt8}
+    distname_len::UInt64
+    distname::Ptr{UInt8}
     # T typename
-    t_name_len :: UInt64
-    t_name :: Ptr{UInt8} 
+    t_name_len::UInt64
+    t_name::Ptr{UInt8}
 end
 
 
@@ -390,19 +419,19 @@ The parameters necessay to call loadHnsw are:
 struct HnswDescription
     maxNbConn::Int64
     # number of observed layers
-    nb_layer :: Int64
+    nb_layer::Int64
     # search parameter
-    ef :: Int64
+    ef::Int64
     # total number of points
-    nb_point:: Int64
+    nb_point::Int64
     # dimesion of data vector
-    data_dimension :: Int64
+    data_dimension::Int64
     # type of vector 
-    type :: DataType
+    type::DataType
     # name of distance
     distname::String
     # pointer on distance function
-    distfunctPtr :: Union{Some{Ptr{Cvoid}} , Nothing}
+    distfunctPtr::Union{Some{Ptr{Cvoid}},Nothing}
 
 end
 
@@ -419,7 +448,7 @@ This function returns a description of graph stored such as type of data stored 
     by function loadHnsw(filename :: String, ....)
     typename and distancename transmitted are those know to Rust
 """
-function getDescription(filename :: String)
+function getDescription(filename::String)
     #
     description_ptr = ccall(
         (:load_hnsw_description, libhnswso),
@@ -433,14 +462,14 @@ function getDescription(filename :: String)
         return nothing
     end
     #
-    ffiDescription  = unsafe_load(description_ptr::Ptr{LoadHnswDescription})
+    ffiDescription = unsafe_load(description_ptr::Ptr{LoadHnswDescription})
     @info " data dimension : " ffiDescription.data_dimension
-    typename_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.t_name, NTuple{1,UInt64}(ffiDescription.t_name_len); own = true)
+    typename_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.t_name, NTuple{1,UInt64}(ffiDescription.t_name_len); own=true)
     typename = String(typename_u)
     @info "getDescription got typename : " typename
     # get key for typename
     allkeys = collect(keys(implementedTypes))
-    keyindex = findfirst(x-> implementedTypes[x] == typename , allkeys)
+    keyindex = findfirst(x -> implementedTypes[x] == typename, allkeys)
     graphOnly = false
     if keyindex === nothing
         graphOnly = true
@@ -452,13 +481,13 @@ function getDescription(filename :: String)
         @warn "loading only graph part of data"
         typename = "NoData"
         keytype = Nothing
-    else 
+    else
         keytype = allkeys[keyindex]
-        @info " keytype : " keytype 
+        @info " keytype : " keytype
     end
     # now we have rust type name and we know it is implemented
     # we must check if distname is "DistPtr"
-    distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own = true)
+    distname_u = unsafe_wrap(Array{UInt8,1}, ffiDescription.distname, NTuple{1,UInt64}(ffiDescription.distname_len); own=true)
     distname = String(distname_u)
     if graphOnly
         # if graphOnly we set distance to NoDist
@@ -467,16 +496,16 @@ function getDescription(filename :: String)
     # dump info
     println("Description generated :")
     println("distance name : ", distname)
-    println("data type : ", typename)   
+    println("data type : ", typename)
     #
     HnswDescription(Int64(ffiDescription.max_nb_connection),
-                    Int64(ffiDescription.nb_layer),
-                    Int64(ffiDescription.ef),
-                    Int64(ffiDescription.nb_point),
-                    Int64(ffiDescription.data_dimension),
-                    keytype,
-                    distname,
-                    nothing
+        Int64(ffiDescription.nb_layer),
+        Int64(ffiDescription.ef),
+        Int64(ffiDescription.nb_point),
+        Int64(ffiDescription.data_dimension),
+        keytype,
+        distname,
+        nothing
     )
 end
 
@@ -514,11 +543,13 @@ as no query will be possible with the Nothing type of data
     - "DistNoDist"
 
 
-This function returns a couple (HnswDescription, HnswApi)
+This function returns a couple (HnswDescription, HnswApi, HnswIoApi)
 """
-function loadHnsw(filename :: String, type :: DataType, distname :: String)
+function loadHnsw(filename::String, type::DataType, distname::String)
+    # get a HnswIoApi pointer to drive reload
+    hnswio = getHnswio(filename)
     # append hnsw.graph and load description
-    graphFileName  = filename*".hnsw.graph"
+    graphFileName = filename * ".hnsw.graph"
     # get a HnswDescription
     description = getDescription(graphFileName)
     # check for types
@@ -530,19 +561,20 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     rust_type_name = checkForImplementedType(type)
     # call rust stub
     @eval hnsw = ccall(
-            $(string("load_hnswdump_", rust_type_name, "_", distname), libhnswso),
-            Ptr{Hnswrs}, # return type
-            (UInt64, Ptr{UInt8}),
-            UInt64(length($filename)), pointer($filename)
-        )
+        $(string("load_hnswdump_", rust_type_name, "_", distname), libhnswso),
+        Ptr{Hnswrs}, # return type
+        (Ref{HnswIoApi}),
+        hnswio
+    )
     #
+    println("returned from load_hnswdump_")
     maxNbConn = description.maxNbConn
     # we do not know how rust constructed it...
     efConstruction = 0
     distname_load = description.distname
     # coherence check
     findres = findfirst(distname, distname_load)
-    if findres === nothing 
+    if findres === nothing
         # We can accept this only if type is Nothing meaning we reload only graph.
         if type !== Nothing
             @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
@@ -553,5 +585,5 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
         end
     end
     hnswapi = HnswApi(hnsw, type, maxNbConn, efConstruction, distname, nothing)
-    (description, hnswapi)
+    (description, hnswapi, hnswio)
 end
