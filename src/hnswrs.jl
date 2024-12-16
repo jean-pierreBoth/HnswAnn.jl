@@ -543,7 +543,7 @@ function loadHnsw(filename :: String, type :: DataType, distname :: String)
     # coherence check
     findres = findfirst(distname, distname_load)
     if findres === nothing 
-        # We can accept thid only if type is Nothing meaning we reload only graph.
+        # We can accept this only if type is Nothing meaning we reload only graph.
         if type !== Nothing
             @warn "some error occurred, distances do not match, expected %s, got %s", distname, distname_load
             return nothing
