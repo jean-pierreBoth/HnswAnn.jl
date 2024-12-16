@@ -563,7 +563,7 @@ function loadHnsw(filename::String, type::DataType, distname::String)
     @eval hnsw = ccall(
         $(string("load_hnswdump_", rust_type_name, "_", distname), libhnswso),
         Ptr{Hnswrs}, # return type
-        (Ref{HnswIoApi}),
+        (Ref{HnswIoApi},),
         hnswio
     )
     #
